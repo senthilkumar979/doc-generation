@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { redirect } from "next/navigation";
 
 import { fetchFirstOrgIdForUser } from "@/lib/orgs/first-org-id";
@@ -11,19 +13,20 @@ export interface UserOrgSession {
   supabase: Awaited<ReturnType<typeof createServerSupabase>>;
 }
 
-export async function requireUserWithOrg(): Promise<
-  { ok: true; session: UserOrgSession } | { ok: false; reason: "missing_env" }
-> {
-  if (!getSupabasePublicEnv()) return { ok: false, reason: "missing_env" };
+/** Cached per-request so layout + page share one Supabase session + org lookup (faster client navigations). */
+export const requireUserWithOrg = cache(
+  async (): Promise<{ ok: true; session: UserOrgSession } | { ok: false; reason: "missing_env" }> => {
+    if (!getSupabasePublicEnv()) return { ok: false, reason: "missing_env" };
 
-  const supabase = await createServerSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+    const supabase = await createServerSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) redirect("/login");
 
-  const orgId = await fetchFirstOrgIdForUser(supabase, user.id);
-  if (!orgId) redirect("/onboarding/organization");
+    const orgId = await fetchFirstOrgIdForUser(supabase, user.id);
+    if (!orgId) redirect("/onboarding/organization");
 
-  return { ok: true, session: { user, orgId, supabase } };
-}
+    return { ok: true, session: { user, orgId, supabase } };
+  },
+);

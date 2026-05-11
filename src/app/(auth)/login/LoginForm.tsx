@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useRouteTransition } from "@/components/navigation/route-progress-provider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -23,6 +24,7 @@ type Schema = z.infer<typeof schema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const { beginNavigation } = useRouteTransition();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const form = useForm<Schema>({
@@ -43,6 +45,7 @@ export function LoginForm() {
         setError(signError.message);
         return;
       }
+      beginNavigation();
       router.replace(searchParams.get("next") ?? "/dashboard");
       router.refresh();
     } catch (err) {

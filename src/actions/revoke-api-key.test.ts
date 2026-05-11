@@ -89,6 +89,6 @@ describe("revokeApiKeyAction", () => {
     fd.set("id", "123e4567-e89b-12d3-a456-426614174000");
     const result = await revokeApiKeyAction(undefined, fd);
     expect(result.ok).toBe(true);
-    expect(navMocks.revalidatePath).toHaveBeenCalledWith("/dashboard/api-keys");
+    expect(navMocks.revalidatePath).toHaveBeenCalledWith("/dashboard/settings/api-keys");
   });
 });

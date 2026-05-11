@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { MarkdownView } from "@/components/releases/MarkdownView";
+import { ReleaseDetailBreadcrumbs } from "@/components/releases/releases-breadcrumbs";
 import { Heading } from "@/components/ui/heading";
 import { PageMain } from "@/components/ui/page-main";
 import { Text } from "@/components/ui/text";
-import { TextLink } from "@/components/ui/text-link";
 import { listReleaseEntries, readReleaseDocument } from "@/lib/releases/io";
 
 interface PageProps {
@@ -31,12 +31,8 @@ export default async function ReleaseDetailPage(props: PageProps) {
 
   return (
     <PageMain className="min-h-0">
-      <div className="text-sm leading-none">
-        <TextLink href="/releases" variant="muted">
-          ← All releases
-        </TextLink>
-      </div>
-      <Heading className="mt-6">{doc.title}</Heading>
+      <ReleaseDetailBreadcrumbs title={doc.title} />
+      <Heading className="mt-2">{doc.title}</Heading>
       <Text muted className="mt-2 font-mono text-xs tracking-tight">
         Version {doc.slug}
       </Text>

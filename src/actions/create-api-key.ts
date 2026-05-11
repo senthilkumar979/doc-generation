@@ -49,7 +49,7 @@ export async function createApiKeyAction(
 
   if (error) return { error: error.message };
 
-  revalidatePath("/dashboard/api-keys");
+  revalidatePath("/dashboard/settings/api-keys");
   return {
     revealed: { id: data.id, plaintext, name: parsed.data.name },
   };

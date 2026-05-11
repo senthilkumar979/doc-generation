@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ReleasesIndexBreadcrumbs } from "@/components/releases/releases-breadcrumbs";
 import { Heading } from "@/components/ui/heading";
 import { PageMain } from "@/components/ui/page-main";
 import { Text } from "@/components/ui/text";
@@ -16,6 +17,7 @@ export default async function ReleasesIndexPage() {
 
   return (
     <PageMain className="min-h-0">
+      <ReleasesIndexBreadcrumbs />
       <Heading>Release notes</Heading>
       <Text muted className="mt-3 max-w-xl">
         User-facing changes only. No sensitive operational detail is published here.

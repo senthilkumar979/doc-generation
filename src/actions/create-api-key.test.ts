@@ -92,7 +92,7 @@ describe("createApiKeyAction", () => {
       plaintext: "docr_live_fixedplaintext",
       name: "Staging",
     });
-    expect(navMocks.revalidatePath).toHaveBeenCalledWith("/dashboard/api-keys");
+    expect(navMocks.revalidatePath).toHaveBeenCalledWith("/dashboard/settings/api-keys");
     expect(apiKeySecret.buildApiKeyPlaintext).toHaveBeenCalled();
   });
 

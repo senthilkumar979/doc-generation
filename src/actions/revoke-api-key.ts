@@ -39,6 +39,6 @@ export async function revokeApiKeyAction(
   if (error) return { error: error.message };
   if (!data) return { error: "Key not found or already revoked." };
 
-  revalidatePath("/dashboard/api-keys");
+  revalidatePath("/dashboard/settings/api-keys");
   return { ok: true };
 }

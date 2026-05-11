@@ -42,7 +42,7 @@ export default async function DashboardPage() {
       </Text>
       <ul className="mt-10 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <li>
-          <TextLink href="/dashboard/api-keys">API keys</TextLink>
+          <TextLink href="/dashboard/settings/api-keys">API keys</TextLink>
           <span> — create and revoke keys for the render API.</span>
         </li>
         <li>
