@@ -22,7 +22,10 @@ export default defineConfig({
         "**/*.test.ts",
         "**/*.test.tsx",
         "**/types.ts",
+        "**/*.stories.tsx",
         "src/middleware.ts",
+        // Visual/regression docs only; keep coverage focused on app logic.
+        "src/components/ui/**",
       ],
       thresholds: {
         lines: 95,

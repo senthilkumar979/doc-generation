@@ -1,6 +1,9 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 
+import { Heading } from "@/components/ui/heading";
+import { PageMain } from "@/components/ui/page-main";
+import { Text } from "@/components/ui/text";
+import { TextLink } from "@/components/ui/text-link";
 import { listReleaseEntries } from "@/lib/releases/io";
 
 export const metadata: Metadata = {
@@ -10,28 +13,24 @@ export const metadata: Metadata = {
 
 export default async function ReleasesIndexPage() {
   const entries = await listReleaseEntries();
+
   return (
-    <div className="mx-auto flex min-h-0 max-w-2xl flex-1 flex-col px-4 py-12">
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Release notes</h1>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+    <PageMain className="min-h-0">
+      <Heading>Release notes</Heading>
+      <Text muted className="mt-3 max-w-xl">
         User-facing changes only. No sensitive operational detail is published here.
-      </p>
-      <ul className="mt-8 space-y-3">
+      </Text>
+      <ul className="mt-10 space-y-4">
         {entries.map((e) => (
-          <li key={e.slug}>
-            <Link
-              href={`/releases/${e.slug}`}
-              className="text-base font-medium text-blue-600 hover:underline dark:text-blue-400"
-            >
+          <li key={e.slug} className="text-sm leading-relaxed">
+            <TextLink href={`/releases/${e.slug}`} variant="accent" className="text-base">
               {e.title}
-            </Link>
-            <span className="ml-2 text-sm text-zinc-500">{e.slug}</span>
+            </TextLink>
+            <span className="text-muted-foreground ml-2 font-mono text-xs">{e.slug}</span>
           </li>
         ))}
       </ul>
-      {entries.length === 0 ? (
-        <p className="mt-8 text-sm text-zinc-500">No releases published yet.</p>
-      ) : null}
-    </div>
+      {entries.length === 0 ? <Text muted className="mt-10 text-sm">No releases published yet.</Text> : null}
+    </PageMain>
   );
 }

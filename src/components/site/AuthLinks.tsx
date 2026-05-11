@@ -1,12 +1,12 @@
-import Link from "next/link";
-
+import { Button } from "@/components/ui/button";
+import { TextLink } from "@/components/ui/text-link";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { createServerSupabase } from "@/lib/supabase/server";
 
 export async function AuthLinks() {
   if (!getSupabasePublicEnv()) {
     return (
-      <span className="text-zinc-500" title="Set NEXT_PUBLIC_SUPABASE_* in .env.local">
+      <span className="text-muted-foreground text-xs" title="Set NEXT_PUBLIC_SUPABASE_* in .env.local">
         Auth not configured
       </span>
     );
@@ -19,31 +19,22 @@ export async function AuthLinks() {
 
   if (!user) {
     return (
-      <span className="space-x-4">
-        <Link
-          href="/signup"
-          className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
-        >
+      <span className="flex gap-4">
+        <TextLink href="/signup" variant="foreground">
           Sign up
-        </Link>
-        <Link
-          href="/login"
-          className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
-        >
+        </TextLink>
+        <TextLink href="/login" variant="foreground">
           Sign in
-        </Link>
+        </TextLink>
       </span>
     );
   }
 
   return (
     <form action="/auth/signout" method="post" className="inline">
-      <button
-        type="submit"
-        className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
-      >
+      <Button variant="ghost" size="sm" type="submit" className="text-accent hover:bg-transparent hover:text-accent/90 hover:underline">
         Sign out
-      </button>
+      </Button>
     </form>
   );
 }

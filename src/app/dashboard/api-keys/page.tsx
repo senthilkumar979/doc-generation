@@ -1,30 +1,34 @@
-import Link from "next/link";
-
-import { ApiKeysPanel, type ApiKeyListItem } from "@/components/dashboard/ApiKeysPanel";
+import { ApiKeysPanel } from "@/components/dashboard/ApiKeysPanel";
+import type { ApiKeyListItem } from "@/components/dashboard/api-key-types";
+import { Heading } from "@/components/ui/heading";
+import { InlineCode } from "@/components/ui/inline-code";
+import { PageMain } from "@/components/ui/page-main";
+import { Text } from "@/components/ui/text";
+import { TextLink } from "@/components/ui/text-link";
 import { requireUserWithOrg } from "@/lib/dashboard/require-user-org";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export default async function ApiKeysPage() {
   if (!getSupabasePublicEnv()) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-16">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">API keys</h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <PageMain>
+        <Heading>API keys</Heading>
+        <Text muted className="mt-3">
           Add Supabase environment variables — see README.
-        </p>
-      </main>
+        </Text>
+      </PageMain>
     );
   }
 
   const gate = await requireUserWithOrg();
   if (!gate.ok) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-16">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">API keys</h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <PageMain>
+        <Heading>API keys</Heading>
+        <Text muted className="mt-3">
           Supabase configuration is unavailable. Reload after applying env vars.
-        </p>
-      </main>
+        </Text>
+      </PageMain>
     );
   }
 
@@ -37,32 +41,32 @@ export default async function ApiKeysPage() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-16">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">API keys</h1>
-        <p className="mt-2 text-sm text-red-600">
+      <PageMain>
+        <Heading>API keys</Heading>
+        <Text className="text-destructive mt-3 text-sm">
           Could not load keys ({error.message}). If you haven’t run the latest Supabase migration, apply{" "}
-          <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">20250511153000_api_keys.sql</code>.
-        </p>
-      </main>
+          <InlineCode>20250511153000_api_keys.sql</InlineCode>.
+        </Text>
+      </PageMain>
     );
   }
 
   const keys = (rows ?? []) as ApiKeyListItem[];
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-16">
-      <p className="text-sm">
-        <Link href="/dashboard" className="text-zinc-600 underline dark:text-zinc-400">
+    <PageMain>
+      <div className="text-sm leading-none">
+        <TextLink href="/dashboard" variant="muted">
           Dashboard
-        </Link>
-      </p>
-      <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">API keys</h1>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        </TextLink>
+      </div>
+      <Heading className="mt-4">API keys</Heading>
+      <Text muted className="mt-3 max-w-xl">
         Secrets are hashed in the database. You only see the full value once after creation.
-      </p>
-      <div className="mt-8">
+      </Text>
+      <div className="mt-10">
         <ApiKeysPanel keys={keys} />
       </div>
-    </main>
+    </PageMain>
   );
 }

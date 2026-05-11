@@ -1,18 +1,14 @@
-import Link from "next/link";
-
 import { AuthLinks } from "@/components/site/AuthLinks";
+import { TextLink } from "@/components/ui/text-link";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-zinc-200 bg-white py-6 text-center text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-      <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-6">
+    <footer className="border-t border-border bg-card/40 py-8 text-center backdrop-blur-sm">
+      <div className="flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground sm:flex-row sm:gap-6">
         <AuthLinks />
-        <Link
-          href="/releases"
-          className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
-        >
+        <TextLink href="/releases" variant="muted">
           Release notes
-        </Link>
+        </TextLink>
       </div>
     </footer>
   );

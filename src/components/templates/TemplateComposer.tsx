@@ -4,6 +4,19 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { createTemplateAction } from "@/actions/create-template";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { TEMPLATE_TYPES } from "@/lib/templates/constants";
 
 export function TemplateComposer() {
@@ -29,68 +42,54 @@ export function TemplateComposer() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 rounded border border-zinc-200 p-4 dark:border-zinc-800">
-      <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">New template</h2>
-      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        Name
-        <input
-          name="name"
-          type="text"
-          required
-          minLength={1}
-          maxLength={120}
-          className="mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-        />
-      </label>
-      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        Type
-        <select
-          name="template_type"
-          value={kind}
-          onChange={(e) => setKind(e.target.value as (typeof TEMPLATE_TYPES)[number])}
-          className="mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-        >
-          {TEMPLATE_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t === "letter" ? "Letter (PDF preview)" : "Blank"}
-            </option>
-          ))}
-        </select>
-      </label>
-      {kind === "letter" ? (
-        <>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Subject
-            <input
-              name="subject"
-              type="text"
-              required
-              minLength={1}
-              maxLength={200}
-              className="mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-            />
-          </label>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Body
-            <textarea
-              name="content"
-              required
-              minLength={1}
-              maxLength={20000}
-              rows={5}
-              className="mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-            />
-          </label>
-        </>
-      ) : null}
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-      >
-        {pending ? "Saving…" : "Create template"}
-      </button>
-    </form>
+    <Card>
+      <CardHeader>
+        <CardTitle>New template</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <input type="hidden" name="template_type" value={kind} />
+          <div className="grid gap-2">
+            <Label htmlFor="tpl-name">Name</Label>
+            <Input id="tpl-name" name="name" required minLength={1} maxLength={120} placeholder="Customer letter" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="tpl-type">Type</Label>
+            <Select
+              value={kind}
+              onValueChange={(v) => setKind(v as (typeof TEMPLATE_TYPES)[number])}
+            >
+              <SelectTrigger id="tpl-type">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="letter">Letter (PDF preview)</SelectItem>
+                <SelectItem value="blank">Blank</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {kind === "letter" ? (
+            <>
+              <div className="grid gap-2">
+                <Label htmlFor="tpl-subject">Subject</Label>
+                <Input id="tpl-subject" name="subject" required minLength={1} maxLength={200} placeholder="Statement" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="tpl-body">Body</Label>
+                <Textarea id="tpl-body" name="content" required minLength={1} maxLength={20000} rows={5} />
+              </div>
+            </>
+          ) : null}
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Button type="submit" disabled={pending}>
+            {pending ? "Saving…" : "Create template"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

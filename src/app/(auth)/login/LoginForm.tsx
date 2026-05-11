@@ -1,76 +1,105 @@
 "use client";
 
-import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { TextLink } from "@/components/ui/text-link";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
+
+const schema = z.object({
+  email: z.string().email("Enter a valid work email."),
+  password: z.string().min(1, "Password is required."),
+});
+
+type Schema = z.infer<typeof schema>;
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const form = useForm<Schema>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "", password: "" },
+    mode: "onBlur",
+  });
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
+  async function onSubmit(values: Schema) {
     setError(null);
-    const form = event.currentTarget;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
     try {
       const supabase = createBrowserSupabase();
-      const { error: signError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: signError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
       if (signError) {
         setError(signError.message);
-        setLoading(false);
         return;
       }
       router.replace(searchParams.get("next") ?? "/dashboard");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign-in failed");
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Sign-in failed.");
     }
   }
 
+  const busy = form.formState.isSubmitting;
+
   return (
-    <form onSubmit={onSubmit} className="mt-6 space-y-4">
-      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        Email
-        <input
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-4">
+        <FormField
+          control={form.control}
           name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" autoComplete="email" placeholder="you@company.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </label>
-      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        Password
-        <input
+        <FormField
+          control={form.control}
           name="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          className="mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" autoComplete="current-password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </label>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded bg-zinc-900 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-      >
-        {loading ? "Signing in…" : "Sign in"}
-      </button>
-      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-        No account?{" "}
-        <Link href="/signup" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
-          Sign up
-        </Link>
-      </p>
-    </form>
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+        <Button type="submit" className="w-full" disabled={busy}>
+          {busy ? (
+            <>
+              <Spinner />
+              Signing in…
+            </>
+          ) : (
+            "Sign in"
+          )}
+        </Button>
+        <div className="text-center text-sm text-muted-foreground">
+          No account? <TextLink href="/signup">Sign up</TextLink>
+        </div>
+      </form>
+    </Form>
   );
 }

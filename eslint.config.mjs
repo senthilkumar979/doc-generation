@@ -1,13 +1,21 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import storybook from "eslint-plugin-storybook";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  ...storybook.configs["flat/recommended"],
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    ignores: [
+      "src/**/*.test.ts",
+      "src/**/*.test.tsx",
+      "src/components/ui/**/*.{ts,tsx}",
+      "src/**/*.stories.{ts,tsx}",
+      "src/theme/**/*.stories.{ts,tsx}",
+    ],
     rules: {
       "max-lines": [
         "error",

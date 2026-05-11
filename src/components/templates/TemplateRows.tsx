@@ -1,11 +1,13 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 
 import type { TemplateActionResult } from "@/actions/create-template";
 import { deleteTemplateAction } from "@/actions/delete-template";
 import { updateTemplateAction } from "@/actions/update-template";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import type { TemplateType } from "@/lib/templates/constants";
 import { letterPayloadSchema } from "@/lib/templates/payload-schema";
 
@@ -53,100 +55,59 @@ export function TemplateRows({ templates }: TemplateRowsProps) {
   }
 
   if (templates.length === 0) {
-    return <p className="text-sm text-zinc-600 dark:text-zinc-400">No templates yet.</p>;
+    return <Text muted>No templates yet.</Text>;
   }
 
   return (
     <div className="space-y-4">
-      {actionError ? <p className="text-sm text-red-600">{actionError}</p> : null}
-      <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+      {actionError ? <Text className="text-destructive text-sm">{actionError}</Text> : null}
+      <ul className="divide-y divide-border">
         {templates.map((t) => (
-          <TemplateListItem
-            key={t.id}
-            template={t}
-            editId={editId}
-            previewId={previewId}
-            onDelete={() => void submitDelete(t.id)}
-            onEdit={() => setEditId(t.id)}
-            onPreviewToggle={() => setPreviewId(previewId === t.id ? null : t.id)}
-            onSubmitUpdate={submitUpdate}
-            onCancelEdit={() => setEditId(null)}
-          />
+          <li key={t.id} className="space-y-4 py-6 first:pt-0">
+            {editId === t.id ? (
+              <TemplateRowEditForm template={t} onCancel={() => setEditId(null)} onSubmit={submitUpdate} />
+            ) : (
+              <TemplateRowHeading template={t} onDelete={() => void submitDelete(t.id)} onEdit={() => setEditId(t.id)} />
+            )}
+            <PreviewBlock
+              parsedLetter={t.template_type === "letter" ? letterPayloadSchema.safeParse(t.payload) : null}
+              showPreview={previewId === t.id}
+              templateType={t.template_type}
+              onToggle={() => setPreviewId(previewId === t.id ? null : t.id)}
+            />
+          </li>
         ))}
       </ul>
     </div>
   );
 }
 
-interface TemplateListItemProps {
-  template: TemplateRowDto;
-  editId: string | null;
-  previewId: string | null;
-  onEdit: () => void;
-  onDelete: () => void;
-  onPreviewToggle: () => void;
-  onSubmitUpdate: (e: FormEvent<HTMLFormElement>) => void | Promise<void>;
-  onCancelEdit: () => void;
-}
-
-function TemplateListItem({
-  template: t,
-  editId,
-  previewId,
-  onEdit,
-  onDelete,
-  onPreviewToggle,
-  onSubmitUpdate,
-  onCancelEdit,
-}: TemplateListItemProps) {
-  const parsedLetter = t.template_type === "letter" ? letterPayloadSchema.safeParse(t.payload) : null;
-
-  return (
-    <li className="space-y-3 py-5">
-      {editId === t.id ? (
-        <TemplateRowEditForm template={t} onCancel={onCancelEdit} onSubmit={onSubmitUpdate} />
-      ) : (
-        <TemplateRowHeading template={t} onDelete={onDelete} onEdit={onEdit} />
-      )}
-      <PreviewBlock
-        templateType={t.template_type}
-        parsedLetter={parsedLetter}
-        showPreview={previewId === t.id}
-        onToggle={onPreviewToggle}
-      />
-    </li>
-  );
-}
-
-function PreviewBlock({
-  templateType,
-  parsedLetter,
-  showPreview,
-  onToggle,
-}: {
+interface PreviewBlockProps {
   templateType: TemplateType;
   parsedLetter: ReturnType<typeof letterPayloadSchema.safeParse> | null;
   showPreview: boolean;
   onToggle: () => void;
-}) {
+}
+
+function PreviewBlock({ templateType, parsedLetter, showPreview, onToggle }: PreviewBlockProps) {
   if (templateType === "letter" && parsedLetter?.success) {
     return (
-      <div>
-        <button
-          type="button"
-          className="text-sm font-medium text-zinc-900 underline dark:text-zinc-50"
-          onClick={onToggle}
-        >
+      <div className="space-y-3">
+        <Button variant="ghost" size="sm" type="button" className="-ml-3 h-auto px-3 underline-offset-4 hover:underline" onClick={onToggle}>
           {showPreview ? "Hide PDF preview" : "Show PDF preview"}
-        </button>
+        </Button>
         {showPreview ? <LetterPdfPreview payload={parsedLetter.data} /> : null}
       </div>
     );
   }
 
   if (templateType === "letter" && parsedLetter && !parsedLetter.success) {
-    return <p className="text-xs text-red-600">Stored letter payload failed validation.</p>;
+    return <Text className="text-destructive text-xs">Stored letter payload failed validation.</Text>;
   }
 
-  return <p className="text-xs text-zinc-500">Blank templates have nothing to preview yet.</p>;
+  return (
+    <Text muted className="text-xs leading-relaxed">
+      Blank templates have nothing to preview yet.
+    </Text>
+  );
 }

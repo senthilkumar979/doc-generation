@@ -1,13 +1,17 @@
+import { Heading } from "@/components/ui/heading";
+import { PageMain } from "@/components/ui/page-main";
+import { Text } from "@/components/ui/text";
+
 import { OnboardingForm } from "./OnboardingForm";
 
-export default function OnboardingOrganizationPage() {
+export default function OrganizationOnboardingPage() {
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Create your organization</h1>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        You need an organization before using the DocRail dashboard.
-      </p>
+    <PageMain className="max-w-md">
+      <Heading>Create your organization</Heading>
+      <Text muted className="mt-3">
+        This name appears on compliance exports and shared template libraries.
+      </Text>
       <OnboardingForm />
-    </div>
+    </PageMain>
   );
 }

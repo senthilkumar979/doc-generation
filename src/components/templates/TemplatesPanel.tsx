@@ -1,5 +1,8 @@
 "use client";
 
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+
 import { TemplateComposer } from "./TemplateComposer";
 import { TemplateRows } from "./TemplateRows";
 import type { TemplateRowDto } from "./template-row-dto";
@@ -12,11 +15,10 @@ export function TemplatesPanel({ templates }: TemplatesPanelProps) {
   return (
     <div className="space-y-10">
       <TemplateComposer />
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Your templates</h2>
-        <div className="mt-4">
-          <TemplateRows templates={templates} />
-        </div>
+      <Separator />
+      <section className="space-y-5">
+        <Heading as="h2">Your templates</Heading>
+        <TemplateRows templates={templates} />
       </section>
     </div>
   );

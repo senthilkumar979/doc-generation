@@ -219,4 +219,25 @@ describe("TemplateRows", () => {
     await waitFor(() => expect(updateTemplateAction).toHaveBeenCalled());
     expect(routerMocks.refresh).toHaveBeenCalled();
   });
+
+  it("leaves edit mode when cancel is pressed", () => {
+    render(
+      <TemplateRows
+        templates={[
+          {
+            id: "123e4567-e89b-12d3-a456-426614174000",
+            name: "One",
+            template_type: "blank",
+            payload: {},
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+  });
 });

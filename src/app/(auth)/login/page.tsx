@@ -1,14 +1,29 @@
 import { Suspense } from "react";
 
+import { Heading } from "@/components/ui/heading";
+import { PageMain } from "@/components/ui/page-main";
+import { Spinner } from "@/components/ui/spinner";
+import { Text } from "@/components/ui/text";
+
 import { LoginForm } from "./LoginForm";
 
 export default function LoginPage() {
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Sign in</h1>
-      <Suspense fallback={<p className="mt-6 text-sm text-zinc-500">Loading…</p>}>
+    <PageMain className="max-w-md">
+      <Heading>Sign in</Heading>
+      <Text muted className="mt-3">
+        Use your work email — sessions respect your IdP policies.
+      </Text>
+      <Suspense
+        fallback={
+          <div className="mt-8 flex items-center gap-2 text-muted-foreground">
+            <Spinner />
+            <Text muted>Loading…</Text>
+          </div>
+        }
+      >
         <LoginForm />
       </Suspense>
-    </div>
+    </PageMain>
   );
 }

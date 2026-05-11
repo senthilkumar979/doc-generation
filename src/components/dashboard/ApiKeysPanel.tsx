@@ -1,136 +1,139 @@
 "use client";
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertTriangle } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { createApiKeyAction, type CreateApiKeyResult } from "@/actions/create-api-key";
 import { revokeApiKeyAction } from "@/actions/revoke-api-key";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Heading } from "@/components/ui/heading";
+import { InlineCode } from "@/components/ui/inline-code";
+import { Input } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
 
-export interface ApiKeyListItem {
-  id: string;
-  name: string;
-  key_prefix: string;
-  created_at: string;
-  revoked_at: string | null;
-}
+import { buildApiKeyColumns } from "./api-keys-columns";
+import type { ApiKeyListItem } from "./api-key-types";
+
+export type { ApiKeyListItem } from "./api-key-types";
 
 interface ApiKeysPanelProps {
   keys: ApiKeyListItem[];
 }
 
+const createKeySchema = z.object({
+  name: z.string().min(1, "Label required.").max(80),
+});
+
+type CreateKeyForm = z.infer<typeof createKeySchema>;
+
 export function ApiKeysPanel({ keys }: ApiKeysPanelProps) {
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [createPending, setCreatePending] = useState(false);
-  const [revealed, setRevealed] = useState<CreateApiKeyResult["revealed"]>(undefined);
-  const [revokeError, setRevokeError] = useState<string | null>(null);
+  const [createFatal, setCreateFatal] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<CreateApiKeyResult["revealed"]>();
+  const [revokeFatal, setRevokeFatal] = useState<string | null>(null);
   const [revokePending, setRevokePending] = useState<string | null>(null);
 
-  async function onCreate(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    setCreatePending(true);
-    setCreateError(null);
-    const formData = new FormData(form);
-    const result = await createApiKeyAction(undefined, formData);
-    setCreatePending(false);
-    if (result.error) {
-      setCreateError(result.error);
-      return;
-    }
-    if (result.revealed) {
-      setRevealed(result.revealed);
-      form.reset();
-    }
-  }
+  const form = useForm<CreateKeyForm>({
+    resolver: zodResolver(createKeySchema),
+    defaultValues: { name: "" },
+    mode: "onBlur",
+  });
 
-  async function onRevoke(id: string) {
+  const onRevoke = useCallback(async (id: string) => {
     setRevokePending(id);
-    setRevokeError(null);
+    setRevokeFatal(null);
     const fd = new FormData();
     fd.set("id", id);
     const result = await revokeApiKeyAction(undefined, fd);
     setRevokePending(null);
-    if (result.error) setRevokeError(result.error);
+    if (result.error) setRevokeFatal(result.error);
+  }, []);
+
+  async function onCreate(values: CreateKeyForm) {
+    setCreateFatal(null);
+    const fd = new FormData();
+    fd.set("name", values.name);
+    const result = await createApiKeyAction(undefined, fd);
+    if (result.error) {
+      setCreateFatal(result.error);
+      return;
+    }
+    if (result.revealed) {
+      setRevealed(result.revealed);
+      form.reset({ name: "" });
+    }
   }
+
+  const columns = useMemo(
+    () => buildApiKeyColumns({ onRevoke, revokePending }),
+    [onRevoke, revokePending],
+  );
 
   return (
     <div className="space-y-8">
       {revealed ? (
-        <div className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
-          <p className="font-medium">Copy this secret now</p>
-          <p className="mt-1 text-amber-900/90 dark:text-amber-200/90">
-            It won’t be shown again. Key: <span className="font-semibold">{revealed.name}</span>
-          </p>
-          <code className="mt-3 block overflow-x-auto rounded bg-white/80 px-2 py-2 text-xs dark:bg-zinc-900">
-            {revealed.plaintext}
-          </code>
-          <button
-            type="button"
-            className="mt-3 rounded bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-            onClick={() => setRevealed(undefined)}
-          >
-            I’ve saved it
-          </button>
-        </div>
+        <Alert variant="warning">
+          <AlertTriangle />
+          <AlertTitle>Copy this secret now</AlertTitle>
+          <AlertDescription className="grid gap-3">
+            <p>
+              It won’t be shown again. Key: <span className="font-semibold text-foreground">{revealed.name}</span>
+            </p>
+            <InlineCode className="block whitespace-pre-wrap break-all px-3 py-2 text-xs">{revealed.plaintext}</InlineCode>
+            <div>
+              <Button variant="warning" size="sm" type="button" onClick={() => setRevealed(undefined)}>
+                I’ve saved it
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
-      <form onSubmit={onCreate} className="space-y-3 rounded border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Create key</h2>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Label
-          <input
-            name="name"
-            type="text"
-            required
-            minLength={1}
-            maxLength={80}
-            placeholder="Production PDFs"
-            className="mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-          />
-        </label>
-        {createError ? <p className="text-sm text-red-600">{createError}</p> : null}
-        <button
-          type="submit"
-          disabled={createPending}
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          {createPending ? "Creating…" : "Generate API key"}
-        </button>
-      </form>
-
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Your keys</h2>
-        {revokeError ? <p className="mt-2 text-sm text-red-600">{revokeError}</p> : null}
-        {keys.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">No API keys yet.</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-zinc-200 dark:divide-zinc-800">
-            {keys.map((k) => (
-              <li key={k.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <div>
-                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{k.name}</p>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                    <span className="font-mono">{k.key_prefix}…</span>
-                    {" · "}
-                    {new Date(k.created_at).toLocaleString()}
-                    {k.revoked_at ? " · revoked" : ""}
-                  </p>
-                </div>
-                {k.revoked_at ? (
-                  <span className="text-xs text-zinc-500">Revoked</span>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={revokePending === k.id}
-                    className="text-sm text-red-600 hover:underline disabled:opacity-50"
-                    onClick={() => void onRevoke(k.id)}
-                  >
-                    {revokePending === k.id ? "Revoking…" : "Revoke"}
-                  </button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Create key</CardTitle>
+          <CardDescription>Labels appear in audits; choose something your security team recognises.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onCreate)} className="flex max-w-xl flex-col gap-4 sm:flex-row sm:items-end">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="min-w-0 flex-1">
+                    <FormLabel>Label</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Production PDFs"
+                        autoComplete="off"
+                        disabled={form.formState.isSubmitting}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
+              />
+              <Button type="submit" disabled={form.formState.isSubmitting} className="shrink-0">
+                {form.formState.isSubmitting ? "Creating…" : "Generate API key"}
+              </Button>
+            </form>
+          </Form>
+          {createFatal ? <Text className="text-destructive mt-3 text-xs">{createFatal}</Text> : null}
+        </CardContent>
+      </Card>
+
+      <section className="space-y-3">
+        <Heading as="h2">Your keys</Heading>
+        {revokeFatal ? <Text className="text-destructive text-sm">{revokeFatal}</Text> : null}
+        <DataTable columns={columns} data={keys} emptyMessage="No API keys yet." />
       </section>
     </div>
   );
