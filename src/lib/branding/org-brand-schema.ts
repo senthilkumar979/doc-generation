@@ -87,7 +87,8 @@ export const orgBrandImageFormSchema = z.object({
   id: z.string().uuid().optional(),
   label: short,
   imageType: z.enum(["hero", "banner", "cover", "general"]),
-  imageUrl: urlLike.refine((v) => v.trim() !== "", "Image URL is required."),
+  /** Optional legacy URL; new uploads use a file instead. */
+  imageUrl: urlLike.optional(),
 });
 
 export type OrgBrandImageFormValues = z.infer<typeof orgBrandImageFormSchema>;

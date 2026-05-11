@@ -47,11 +47,11 @@ function clickOutlineClose(dialog: HTMLElement, user: ReturnType<(typeof userEve
   return user.click(target);
 }
 
-function cardRoot(title: string) {
+function cardRoot(title: string): HTMLElement {
   const heading = screen.getByRole("heading", { name: title });
   const root = heading.closest("[data-slot=\"card\"]");
   if (!root) throw new Error(`card not found for ${title}`);
-  return root;
+  return root as HTMLElement;
 }
 
 describe("BrandingSettingsPanel", () => {
@@ -120,7 +120,10 @@ describe("BrandingSettingsPanel", () => {
     render(<BrandingSettingsPanel profile={null} addresses={[]} images={images} />);
 
     expect(screen.getByText("Hero art")).toBeInTheDocument();
-    expect(screen.getByText(/h\.png/)).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Hero art preview" })).toHaveAttribute(
+      "src",
+      "https://cdn.example/h.png",
+    );
   });
 
   it("falls back when an additional image lacks a label", () => {
@@ -141,7 +144,7 @@ describe("BrandingSettingsPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/untitled image/i)).toBeInTheDocument();
+    expect(within(cardRoot("Additional images")).getByText(/untitled image/i)).toBeInTheDocument();
   });
 
   it("uses multiline fields for editable taglines inside the Identity dialog", async () => {

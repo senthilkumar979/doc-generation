@@ -16,6 +16,11 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerSupabase: vi.fn(),
 }));
 
+vi.mock("@/lib/branding/brand-assets-storage", () => ({
+  replaceLogo: vi.fn(),
+  replaceIcon: vi.fn(),
+}));
+
 import { fetchFirstOrgIdForUser } from "@/lib/orgs/first-org-id";
 import { createServerSupabase } from "@/lib/supabase/server";
 
@@ -34,7 +39,7 @@ describe("upsertOrgBrandProfileSectionAction", () => {
     fd.set("section", "typography");
 
     const result = await upsertOrgBrandProfileSectionAction(undefined, fd);
-    expect(result.error).toMatch(/invalid section/i);
+    expect(result).toMatchObject({ error: expect.stringMatching(/invalid section/i) });
   });
 
   it("requires authentication", async () => {
@@ -45,7 +50,7 @@ describe("upsertOrgBrandProfileSectionAction", () => {
     const fd = new FormData();
     fd.set("section", "identity");
     const result = await upsertOrgBrandProfileSectionAction(undefined, fd);
-    expect(result.error).toMatch(/signed in/i);
+    expect(result).toMatchObject({ error: expect.stringMatching(/signed in/i) });
   });
 
   it("upserts identity patch", async () => {
@@ -78,9 +83,17 @@ describe("upsertOrgBrandProfileSectionAction", () => {
 
   it("upserts colors and media sections", async () => {
     const upsert = vi.fn().mockResolvedValue({ error: null });
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: { logo_url: "https://proj.supabase.co/storage/v1/object/public/org-brand-assets/org-42/brand/logo.png", icon_url: null },
+    });
     vi.mocked(createServerSupabase).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }) },
-      from: vi.fn().mockReturnValue({ upsert }),
+      from: vi.fn().mockImplementation(() => ({
+        upsert,
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({ maybeSingle })),
+        })),
+      })),
     } as never);
     vi.mocked(fetchFirstOrgIdForUser).mockResolvedValue("org-42");
 
@@ -100,12 +113,10 @@ describe("upsertOrgBrandProfileSectionAction", () => {
 
     const media = new FormData();
     media.set("section", "media");
-    media.set("logoUrl", "https://x.example/l.png");
-    media.set("iconUrl", "");
     expect(await upsertOrgBrandProfileSectionAction(undefined, media)).toEqual({ ok: true });
     expect(upsert).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        logo_url: "https://x.example/l.png",
+        logo_url: "https://proj.supabase.co/storage/v1/object/public/org-brand-assets/org-42/brand/logo.png",
         icon_url: null,
       }),
       { onConflict: "org_id" },
@@ -125,6 +136,6 @@ describe("upsertOrgBrandProfileSectionAction", () => {
     fd.set("companyName", "");
 
     const result = await upsertOrgBrandProfileSectionAction(undefined, fd);
-    expect(result.error).toBe("rls");
+    expect(result).toEqual({ error: "rls" });
   });
 });

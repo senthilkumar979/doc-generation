@@ -7,8 +7,17 @@ interface BrandingSectionCardProps {
   title: string
   description: string
   rows: Array<{ label: string; value: string | null }>
+  /** Shown when `rows` is empty (e.g. optional extras card). */
   emptyText?: string
+  isImageCard?: boolean
   onEdit: () => void
+}
+
+function isProbablyImageAssetUrl(text: string): boolean {
+  if (!/^https?:\/\//i.test(text)) return false
+  if (/\.(png|jpe?g|svg)(\?|#|$)/i.test(text)) return true
+  if (/\/object\/public\//i.test(text)) return true
+  return false
 }
 
 export function BrandingSectionCard({
@@ -17,6 +26,7 @@ export function BrandingSectionCard({
   rows,
   emptyText = 'No data available',
   onEdit,
+  isImageCard = false,
 }: BrandingSectionCardProps) {
   const populated = rows.filter((r) => !!r.value?.trim()).length
 
@@ -32,16 +42,32 @@ export function BrandingSectionCard({
         </Button>
       </CardHeader>
       <CardContent className="space-y-2">
-        {rows?.map((row) => (
-          <div
-            key={row.label}
-            className="grid grid-cols-[8rem_1fr] items-start gap-3 text-sm"
-          >
-            <span className="text-muted-foreground">{row.label}</span>
-            <ValueCell label={row.label} value={row.value} />
-          </div>
-        ))}
-        {rows.length === 0 && <Text muted>{emptyText}</Text>}
+        <div
+          className={
+            isImageCard
+              ? 'grid grid-cols-2 items-start gap-3 text-sm'
+              : 'space-y-2'
+          }
+        >
+          {rows.map((row) => (
+            <div
+              key={row.label}
+              className={
+                isImageCard
+                  ? 'flex flex-col gap-2'
+                  : 'grid grid-cols-[8rem_1fr] items-start gap-3 text-sm'
+              }
+            >
+              <span className="text-muted-foreground">{row.label}</span>
+              <ValueCell label={row.label} value={row.value} />
+            </div>
+          ))}
+        </div>
+        {rows.length === 0 ? (
+          <Text muted className="text-sm">
+            {emptyText}
+          </Text>
+        ) : null}
       </CardContent>
     </Card>
   )
@@ -66,14 +92,21 @@ function ValueCell({ label, value }: { label: string; value: string | null }) {
 
   if (label === 'Logo' || label === 'Icon' || label === 'Hero') {
     return (
-      <span className="inline-flex min-w-0 items-center gap-2">
-        <img
-          src={text}
-          alt={`${label} preview`}
-          className="size-8 rounded border border-border object-cover"
-        />
-        <span className="truncate text-foreground">{text}</span>
-      </span>
+      <img
+        src={text}
+        alt={`${label} preview`}
+        className="max-h-24 rounded object-contain"
+      />
+    )
+  }
+
+  if (isProbablyImageAssetUrl(text)) {
+    return (
+      <img
+        src={text}
+        alt={`${label} preview`}
+        className="max-h-24 rounded object-contain"
+      />
     )
   }
 

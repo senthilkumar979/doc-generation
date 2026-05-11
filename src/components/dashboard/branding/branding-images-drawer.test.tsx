@@ -30,6 +30,10 @@ import type { OrgBrandImageRow } from "@/lib/branding/org-brand-schema";
 
 import { BrandingImagesDrawer } from "./branding-images-drawer";
 
+function pngFile() {
+  return new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], "a.png", { type: "image/png" });
+}
+
 function clickOutlineClose(dialog: HTMLElement, user: ReturnType<(typeof userEvent)["setup"]>) {
   const target = [...dialog.querySelectorAll("button")].find(
     (b) => b.textContent?.trim() === "Close" && !b.querySelector("svg"),
@@ -69,10 +73,7 @@ describe("BrandingImagesDrawer", () => {
 
     render(<BrandingImagesDrawer open onOpenChange={vi.fn()} images={[image]} />);
 
-    expect(screen.getByRole("img", { name: /hero/i })).toHaveAttribute(
-      "src",
-      "https://cdn.example/z.png",
-    );
+    expect(screen.getByRole("img", { name: /hero$/i })).toHaveAttribute("src", "https://cdn.example/z.png");
 
     await user.click(screen.getByRole("button", { name: "Delete" }));
 
@@ -111,7 +112,7 @@ describe("BrandingImagesDrawer", () => {
     render(<BrandingImagesDrawer open onOpenChange={vi.fn()} images={[]} />);
 
     await user.type(screen.getByLabelText(/^Label$/i), "Hero");
-    await user.type(screen.getByLabelText(/^Image URL$/i), "https://cdn.example/a.png");
+    await user.upload(screen.getByLabelText(/^Image file$/i), pngFile());
     await user.click(screen.getByRole("button", { name: "Add image" }));
 
     expect(upsertOrgBrandImageAction).toHaveBeenCalled();
@@ -126,7 +127,7 @@ describe("BrandingImagesDrawer", () => {
     render(<BrandingImagesDrawer open onOpenChange={vi.fn()} images={[]} />);
 
     await user.type(screen.getByLabelText(/^Label$/i), "Hero");
-    await user.type(screen.getByLabelText(/^Image URL$/i), "https://cdn.example/a.png");
+    await user.upload(screen.getByLabelText(/^Image file$/i), pngFile());
     await user.click(screen.getByRole("button", { name: "Add image" }));
 
     expect(notifyMocks.error).toHaveBeenCalled();

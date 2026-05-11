@@ -1,15 +1,22 @@
 "use client";
 
+import type { ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { upsertOrgBrandProfileSectionAction } from "@/actions/upsert-org-brand-profile";
 import { notify } from "@/lib/toast";
+import {
+  BRAND_IMAGE_ACCEPT_ATTR,
+  BRAND_IMAGE_MAX_MB,
+  validateBrandImageFileForUpload,
+} from "@/lib/branding/brand-image-accept";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Text } from "@/components/ui/text";
 
 interface BrandingMediaDrawerProps {
   open: boolean;
@@ -21,59 +28,185 @@ export function BrandingMediaDrawer({ open, onOpenChange, values }: BrandingMedi
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [logoRev, setLogoRev] = useState(0);
+  const [iconRev, setIconRev] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    setLogoRev((r) => r + 1);
+    setIconRev((r) => r + 1);
+  }, [open, values.logoUrl, values.iconUrl]);
 
   async function onSubmit(formData: FormData) {
     setSaving(true);
     setError(null);
     formData.set("section", "media");
-    const result = await upsertOrgBrandProfileSectionAction(undefined, formData);
-    setSaving(false);
-    if ("error" in result) {
-      notify.error("Could not save logo or icon", { description: result.error });
-      setError(result.error);
-      return;
+    try {
+      const result = await upsertOrgBrandProfileSectionAction(undefined, formData);
+      if ("error" in result) {
+        notify.error("Could not save logo or icon", { description: result.error });
+        setError(result.error);
+        return;
+      }
+      notify.success("Core media updated", { description: "Logo and icon saved." });
+      router.refresh();
+      onOpenChange(false);
+    } finally {
+      setSaving(false);
     }
-    notify.success("Core media updated", { description: "Logo and icon URLs saved." });
-    router.refresh();
-    onOpenChange(false);
   }
+
+  const busy = saving;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-auto right-0 bottom-0 left-auto h-[80vh] max-h-[80vh] w-full max-w-[calc(100%-1rem)] translate-x-0 translate-y-0 rounded-b-none sm:top-[50%] sm:right-auto sm:bottom-auto sm:left-[50%] sm:h-auto sm:max-h-none sm:max-w-2xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-b-xl">
-        <DialogHeader>
-          <DialogTitle>Brand logo & icon</DialogTitle>
-          <DialogDescription>
-            Set core brand media used globally. Additional images are managed separately.
-          </DialogDescription>
-        </DialogHeader>
-        <form action={onSubmit} className="space-y-4">
-          <Field name="logoUrl" label="Logo URL" value={values.logoUrl} />
-          <Field name="iconUrl" label="Icon URL" value={values.iconUrl} />
-          {error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto sm:max-w-2xl">
+        <div className="relative">
+          <DialogHeader>
+            <DialogTitle>Brand logo & icon</DialogTitle>
+            <DialogDescription>
+              Upload JPEG, JPG, PNG, or SVG images (max {BRAND_IMAGE_MAX_MB} MB each). Choosing a file shows a preview; click Save to upload.
+              Leaving a slot
+              unchanged keeps the current asset.
+            </DialogDescription>
+          </DialogHeader>
+          <form action={onSubmit} className="space-y-6">
+            <div className="flex flex-wrap gap-8">
+              <UploadSlot
+                resetKey={logoRev}
+                label="Logo"
+                inputName="logoFile"
+                previewUrl={values.logoUrl.trim() ? values.logoUrl : undefined}
+              />
+              <UploadSlot
+                resetKey={iconRev}
+                label="Icon"
+                inputName="iconFile"
+                previewUrl={values.iconUrl.trim() ? values.iconUrl : undefined}
+              />
+            </div>
+            {error ? (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            <DialogFooter>
+              <Button variant="outline" type="button" disabled={busy} onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={busy}>
+                {busy ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Spinner className="size-4 text-primary-foreground" label="Saving" />
+                    Saving…
+                  </span>
+                ) : (
+                  "Save"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+          {busy ? (
+            <div
+              className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-xl bg-background/80 backdrop-blur-sm"
+              role="progressbar"
+              aria-label="Saving to storage"
+            >
+              <Spinner className="size-10 text-accent" label="Saving" />
+              <Text className="text-sm text-muted-foreground">Saving to storage…</Text>
+            </div>
           ) : null}
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function Field({ name, label, value }: { name: string; label: string; value: string }) {
+interface UploadSlotProps {
+  resetKey: number;
+  label: string;
+  inputName: string;
+  previewUrl?: string;
+}
+
+function UploadSlot({ resetKey, label, inputName, previewUrl }: UploadSlotProps) {
+  const [pickError, setPickError] = useState<string | null>(null);
+  const [picked, setPicked] = useState<{ src: string; name: string } | null>(null);
+
+  useEffect(() => {
+    setPickError(null);
+    setPicked((prev) => {
+      if (prev?.src.startsWith("blob:")) URL.revokeObjectURL(prev.src);
+      return null;
+    });
+  }, [resetKey]);
+
+  useEffect(
+    () => () => {
+      if (picked?.src.startsWith("blob:")) URL.revokeObjectURL(picked.src);
+    },
+    [picked?.src],
+  );
+
+  function onFileChange(event: ChangeEvent<HTMLInputElement>) {
+    setPickError(null);
+    const file = event.target.files?.[0];
+    if (!file) {
+      setPicked((prev) => {
+        if (prev?.src.startsWith("blob:")) URL.revokeObjectURL(prev.src);
+        return null;
+      });
+      return;
+    }
+    const invalid = validateBrandImageFileForUpload(file);
+    if (invalid) {
+      notify.error("Invalid image", { description: invalid });
+      setPickError(invalid);
+      event.target.value = "";
+      setPicked((prev) => {
+        if (prev?.src.startsWith("blob:")) URL.revokeObjectURL(prev.src);
+        return null;
+      });
+      return;
+    }
+
+    const src = URL.createObjectURL(file);
+    setPicked((prev) => {
+      if (prev?.src.startsWith("blob:")) URL.revokeObjectURL(prev.src);
+      return { src, name: file.name };
+    });
+  }
+
+  const displaySrc = picked?.src ?? previewUrl;
+
   return (
-    <div className="space-y-2">
-      <Label htmlFor={`branding-${name}`}>{label}</Label>
-      <Input id={`branding-${name}`} name={name} defaultValue={value} type="url" />
+    <div className="space-y-3">
+      <Label htmlFor={`${inputName}-${resetKey}`}>{label}</Label>
+      <div className="flex min-h-[120px] w-full max-w-xs flex-col items-start gap-3 rounded-md border border-dashed border-border bg-muted/30 p-4">
+        {displaySrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={displaySrc} alt={`Selected ${label}`} className="max-h-24 max-w-full rounded object-contain" />
+        ) : (
+          <span className="text-sm text-muted-foreground">No {label.toLowerCase()} yet</span>
+        )}
+        {picked?.name ? <Text className="text-xs text-foreground">{picked.name}</Text> : null}
+        <input
+          id={`${inputName}-${resetKey}`}
+          key={`${inputName}-${resetKey}`}
+          name={inputName}
+          type="file"
+          accept={BRAND_IMAGE_ACCEPT_ATTR}
+          className="max-w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
+          onChange={onFileChange}
+        />
+        {pickError ? (
+          <Text className="text-xs text-destructive" role="alert">
+            {pickError}
+          </Text>
+        ) : picked ? (
+          <Text className="text-xs text-muted-foreground">Preview ready — click Save to upload.</Text>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -18,7 +18,7 @@ interface BrandingSettingsPanelProps {
 
 export function BrandingSettingsPanel({ profile, addresses, images }: BrandingSettingsPanelProps) {
   const values = useMemo(() => rowToFormValues(profile), [profile]);
-  const [openSection, setOpenSection] = useState<"identity" | "colors" | "addresses" | "media" | "images" | null>(null);
+  const [openSection, setOpenSection] = useState<"identity" | "colors" | "media" | "images" | null>(null);
 
   return (
     <>
@@ -48,22 +48,33 @@ export function BrandingSettingsPanel({ profile, addresses, images }: BrandingSe
         <BrandingAddressPanel addresses={addresses} />
         <BrandingSectionCard
           title="Core media"
+          isImageCard={true}
           description="Logo and icon used in nav, templates, and exports."
-          rows={values.logoUrl || values.iconUrl ? [
-              { label: "Logo", value: values.logoUrl },
-              { label: "Icon", value: values.iconUrl },
-            ]
-          : []}
+          rows={
+            values.logoUrl || values.iconUrl
+              ? [
+                  { label: "Logo", value: values.logoUrl },
+                  { label: "Icon", value: values.iconUrl },
+                ]
+              : []
+          }
           emptyText="No media added yet"
           onEdit={() => setOpenSection("media")}
         />
         <BrandingSectionCard
           title="Additional images"
           description="Extra visual assets like hero, banner, cover, etc."
-          rows={images.length > 0 ? [
-              { label: images[0]?.label ?? "Untitled image", value: images[0]?.image_url ?? null },
-            ]
-          : []}
+          isImageCard={true}
+          rows={
+            images.length > 0
+              ? [
+                  {
+                    label: images[0]?.label?.trim() ? (images[0].label as string) : "Untitled image",
+                    value: images[0]?.image_url ?? null,
+                  },
+                ]
+              : []
+          }
           emptyText="No images added yet"
           onEdit={() => setOpenSection("images")}
         />

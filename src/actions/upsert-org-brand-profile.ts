@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { replaceIcon, replaceLogo } from "@/lib/branding/brand-assets-storage";
+import { pickBrandingUploadFromFormData, validateBrandImageFileForUpload } from "@/lib/branding/brand-image-accept";
 import { fetchFirstOrgIdForUser } from "@/lib/orgs/first-org-id";
 import { createServerSupabase } from "@/lib/supabase/server";
 
@@ -34,7 +36,15 @@ export async function upsertOrgBrandProfileSectionAction(
     return { error: "Invalid section." };
   }
 
-  const patch = buildProfilePatch(section, formData);
+  let patch: Record<string, string | null>;
+  if (section === "media") {
+    const mediaPatch = await buildMediaPatch(scoped.supabase, scoped.orgId, formData);
+    if ("error" in mediaPatch) return { error: mediaPatch.error };
+    patch = mediaPatch.patch;
+  } else {
+    patch = buildProfilePatch(section as "identity" | "colors", formData);
+  }
+
   const now = new Date().toISOString();
 
   const { error: writeError } = await scoped.supabase.from("org_brand_profiles").upsert(
@@ -52,7 +62,43 @@ export async function upsertOrgBrandProfileSectionAction(
   return { ok: true };
 }
 
-function buildProfilePatch(section: BrandingSection, formData: FormData): Record<string, string | null> {
+async function buildMediaPatch(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  orgId: string,
+  formData: FormData,
+): Promise<{ patch: Record<string, string | null> } | { error: string }> {
+  const { data: row } = await supabase
+    .from("org_brand_profiles")
+    .select("logo_url, icon_url")
+    .eq("org_id", orgId)
+    .maybeSingle();
+
+  let logo_url = row?.logo_url ?? null;
+  let icon_url = row?.icon_url ?? null;
+
+  const logoFile = pickBrandingUploadFromFormData(formData.get("logoFile"));
+  const iconFile = pickBrandingUploadFromFormData(formData.get("iconFile"));
+
+  if (logoFile) {
+    const logoErr = validateBrandImageFileForUpload(logoFile);
+    if (logoErr) return { error: logoErr };
+    const uploaded = await replaceLogo(supabase, orgId, logoFile);
+    if ("error" in uploaded) return { error: uploaded.error };
+    logo_url = uploaded.publicUrl;
+  }
+
+  if (iconFile) {
+    const iconErr = validateBrandImageFileForUpload(iconFile);
+    if (iconErr) return { error: iconErr };
+    const uploaded = await replaceIcon(supabase, orgId, iconFile);
+    if ("error" in uploaded) return { error: uploaded.error };
+    icon_url = uploaded.publicUrl;
+  }
+
+  return { patch: { logo_url, icon_url } };
+}
+
+function buildProfilePatch(section: "identity" | "colors", formData: FormData): Record<string, string | null> {
   const str = (key: string) => (formData.get(key) === null ? "" : String(formData.get(key)));
   if (section === "identity") {
     return {
@@ -63,16 +109,10 @@ function buildProfilePatch(section: BrandingSection, formData: FormData): Record
       support_email: normalize(str("supportEmail")),
     };
   }
-  if (section === "colors") {
-    return {
-      primary_color: normalize(str("primaryColor")),
-      secondary_color: normalize(str("secondaryColor")),
-      accent_color: normalize(str("accentColor")),
-    };
-  }
   return {
-    logo_url: normalize(str("logoUrl")),
-    icon_url: normalize(str("iconUrl")),
+    primary_color: normalize(str("primaryColor")),
+    secondary_color: normalize(str("secondaryColor")),
+    accent_color: normalize(str("accentColor")),
   };
 }
 

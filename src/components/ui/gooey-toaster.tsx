@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { GooeyToaster as GoeyToasterRoot } from "goey-toast";
+import { GooeyToaster as GoeyToasterRoot } from 'goey-toast'
 
-import "goey-toast/styles.css";
+import 'goey-toast/styles.css'
 
 export const GooeyToaster = () => (
   <GoeyToasterRoot
@@ -13,8 +13,7 @@ export const GooeyToaster = () => (
     gap={12}
     preset="smooth"
     richColors
-    swipeToDismiss
     closeOnEscape
     showProgress
   />
-);
+)

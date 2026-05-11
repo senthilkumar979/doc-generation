@@ -49,7 +49,7 @@ describe("BrandingMediaDrawer", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(upsertOrgBrandProfileSectionAction).toHaveBeenCalled();
-    expect(notifyMocks.success).toHaveBeenCalledWith("Core media updated", expect.any(Object));
+    expect(notifyMocks.success).toHaveBeenCalledWith("Core media updated", { description: "Logo and icon saved." });
     expect(refreshMock).toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });

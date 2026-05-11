@@ -57,7 +57,7 @@ describe("upsertOrgBrandAddressAction", () => {
     } as never);
 
     const result = await upsertOrgBrandAddressAction(undefined, baseFormData());
-    expect(result.error).toMatch(/signed in/i);
+    expect(result).toMatchObject({ error: expect.stringMatching(/signed in/i) });
   });
 
   it("requires an organization", async () => {
@@ -67,7 +67,7 @@ describe("upsertOrgBrandAddressAction", () => {
     vi.mocked(fetchFirstOrgIdForUser).mockResolvedValue(null);
 
     const result = await upsertOrgBrandAddressAction(undefined, baseFormData());
-    expect(result.error).toMatch(/organization first/i);
+    expect(result).toMatchObject({ error: expect.stringMatching(/organization first/i) });
   });
 
   it("surfaces Supabase errors when clearing primary flags", async () => {
@@ -84,7 +84,7 @@ describe("upsertOrgBrandAddressAction", () => {
 
     const fd = baseFormData({ isPrimary: "true" });
     const result = await upsertOrgBrandAddressAction(undefined, fd);
-    expect(result.error).toBe("clear failed");
+    expect(result).toEqual({ error: "clear failed" });
     expect(clearEq).toHaveBeenCalledWith("org_id", "org-1");
   });
 
@@ -144,7 +144,7 @@ describe("upsertOrgBrandAddressAction", () => {
     const fd = baseFormData();
     fd.set("id", "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
     const result = await upsertOrgBrandAddressAction(undefined, fd);
-    expect(result.error).toBe("missing row");
+    expect(result).toEqual({ error: "missing row" });
   });
 
   it("returns insert errors", async () => {
@@ -159,7 +159,7 @@ describe("upsertOrgBrandAddressAction", () => {
     vi.mocked(fetchFirstOrgIdForUser).mockResolvedValue("org-1");
 
     const result = await upsertOrgBrandAddressAction(undefined, baseFormData());
-    expect(result.error).toBe("dup");
+    expect(result).toEqual({ error: "dup" });
   });
 
   it("clears competing primaries before inserting when isPrimary=true", async () => {
@@ -199,7 +199,7 @@ describe("deleteOrgBrandAddressAction", () => {
 
     const fd = new FormData();
     const result = await deleteOrgBrandAddressAction(undefined, fd);
-    expect(result.error).toMatch(/required/i);
+    expect(result).toMatchObject({ error: expect.stringMatching(/required/i) });
   });
 
   it("deletes and revalidates", async () => {
@@ -241,6 +241,6 @@ describe("deleteOrgBrandAddressAction", () => {
     const fd = new FormData();
     fd.set("id", "addr-77");
     const result = await deleteOrgBrandAddressAction(undefined, fd);
-    expect(result.error).toBe("nope");
+    expect(result).toEqual({ error: "nope" });
   });
 });
