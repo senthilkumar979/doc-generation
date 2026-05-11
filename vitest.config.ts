@@ -15,8 +15,14 @@ export default defineConfig({
       reporter: ["text", "json-summary"],
       include: [
         "src/lib/**/*.ts",
-        "src/components/**/*.tsx",
         "src/actions/**/*.ts",
+        "src/components/dashboard/**/*.tsx",
+        "src/components/navigation/**/*.tsx",
+        "src/components/releases/**/*.tsx",
+        "src/components/site/**/*.tsx",
+        "src/components/templates/**/*.tsx",
+        // Unit-tested UI primitive (remainder of `components/ui` stays out of thresholds).
+        "src/components/ui/breadcrumb.tsx",
       ],
       exclude: [
         "**/*.test.ts",
@@ -24,8 +30,6 @@ export default defineConfig({
         "**/types.ts",
         "**/*.stories.tsx",
         "src/middleware.ts",
-        // Visual/regression docs only; keep coverage focused on app logic.
-        "src/components/ui/**",
       ],
       thresholds: {
         lines: 95,

@@ -1,67 +1,83 @@
-"use client";
+'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from 'next/navigation'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
-import { isInternalRouteChangeClick } from "@/lib/navigation/internal-link-click";
+import { isInternalRouteChangeClick } from '@/lib/navigation/internal-link-click'
 
 interface RouteTransitionContextValue {
-  beginNavigation: () => void;
+  beginNavigation: () => void
 }
 
-const RouteTransitionContext = createContext<RouteTransitionContextValue | null>(null);
+const RouteTransitionContext = createContext<RouteTransitionContextValue | null>(
+  null,
+)
 
 export function useRouteTransition(): RouteTransitionContextValue {
-  const ctx = useContext(RouteTransitionContext);
-  if (!ctx) return { beginNavigation: () => {} };
-  return ctx;
+  const ctx = useContext(RouteTransitionContext)
+  if (!ctx) return { beginNavigation: () => {} }
+  return ctx
 }
 
-const STUCK_MS = 12_000;
+const STUCK_MS = 12_000
 
-export function RouteProgressProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const searchKey = searchParams.toString();
+export function RouteProgressProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const searchKey = searchParams.toString()
 
-  const [active, setActive] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [active, setActive] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearStuckTimeout = useCallback(() => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
     }
-  }, []);
+  }, [])
 
   const beginNavigation = useCallback(() => {
-    clearStuckTimeout();
-    setActive(true);
+    clearStuckTimeout()
+    setActive(true)
     timeoutRef.current = setTimeout(() => {
-      setActive(false);
-      timeoutRef.current = null;
-    }, STUCK_MS);
-  }, [clearStuckTimeout]);
+      setActive(false)
+      timeoutRef.current = null
+    }, STUCK_MS)
+  }, [clearStuckTimeout])
 
   useEffect(() => {
-    setActive(false);
-    clearStuckTimeout();
-  }, [pathname, searchKey, clearStuckTimeout]);
+    clearStuckTimeout()
+    // Collapse the progress shim when the route identity updates (navigation completed).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on pathname/search change
+    setActive(false)
+  }, [pathname, searchKey, clearStuckTimeout])
 
   useEffect(() => {
     function onClickCapture(event: MouseEvent) {
-      if (!(event.target instanceof Element)) return;
-      const anchor = event.target.closest("a");
-      if (!(anchor instanceof HTMLAnchorElement)) return;
-      if (!isInternalRouteChangeClick(anchor, event)) return;
-      beginNavigation();
+      if (!(event.target instanceof Element)) return
+      const anchor = event.target.closest('a')
+      if (!(anchor instanceof HTMLAnchorElement)) return
+      if (!isInternalRouteChangeClick(anchor, event)) return
+      beginNavigation()
     }
 
-    document.addEventListener("click", onClickCapture, true);
-    return () => document.removeEventListener("click", onClickCapture, true);
-  }, [beginNavigation]);
+    document.addEventListener('click', onClickCapture, true)
+    return () => document.removeEventListener('click', onClickCapture, true)
+  }, [beginNavigation])
 
-  const value = useMemo(() => ({ beginNavigation }), [beginNavigation]);
+  const value = useMemo(() => ({ beginNavigation }), [beginNavigation])
 
   return (
     <RouteTransitionContext.Provider value={value}>
@@ -76,5 +92,5 @@ export function RouteProgressProvider({ children }: { children: React.ReactNode 
       ) : null}
       {children}
     </RouteTransitionContext.Provider>
-  );
+  )
 }

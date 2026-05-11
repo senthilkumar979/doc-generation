@@ -28,4 +28,31 @@ describe("getDashboardBreadcrumbItems", () => {
       { label: "Files" },
     ]);
   });
+
+  it("treats bare path as dashboard home", () => {
+    expect(getDashboardBreadcrumbItems("")).toEqual([{ label: "Dashboard" }]);
+  });
+
+  it("titles the settings root without a trailing link", () => {
+    expect(getDashboardBreadcrumbItems("/dashboard/settings")).toEqual([
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Settings" },
+    ]);
+  });
+
+  it("title-cases unknown settings leaf segments when not in nav map", () => {
+    expect(getDashboardBreadcrumbItems("/dashboard/settings/custom-page")).toEqual([
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Settings", href: "/dashboard/settings" },
+      { label: "Custom Page" },
+    ]);
+  });
+
+  it("title-cases unknown non-settings segments", () => {
+    expect(getDashboardBreadcrumbItems("/dashboard/weird-route-name")).toEqual([
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Weird Route Name" },
+    ]);
+  });
 });
+
