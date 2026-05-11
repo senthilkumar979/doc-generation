@@ -63,12 +63,14 @@ export function BrandingEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <form action={onSubmit} className="space-y-4">
+      <DialogContent className="gap-0 overflow-hidden rounded-2xl border-border/80 p-0 sm:max-w-lg">
+        <div className="border-b border-border/60 bg-muted/[0.35] px-6 py-5">
+          <DialogHeader className="space-y-2 text-left">
+            <DialogTitle className="text-xl font-semibold tracking-tight">{title}</DialogTitle>
+            <DialogDescription className="text-[0.8125rem] leading-relaxed">{description}</DialogDescription>
+          </DialogHeader>
+        </div>
+        <form action={onSubmit} className="space-y-4 px-6 py-6">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
               <Label htmlFor={`branding-${field.name}`}>{field.label}</Label>
@@ -89,11 +91,11 @@ export function BrandingEditDialog({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-3 border-t border-border/60 bg-muted/[0.2] px-0 pb-0 pt-5 sm:justify-end">
+            <Button variant="outline" type="button" className="rounded-lg" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" className="rounded-lg font-semibold shadow-sm" disabled={saving}>
               {saving ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>

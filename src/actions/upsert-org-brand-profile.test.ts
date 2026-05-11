@@ -154,7 +154,7 @@ describe("removeOrgBrandCoreMediaAction", () => {
     const fd = new FormData();
     fd.set("slot", "banner");
     const result = await removeOrgBrandCoreMediaAction(undefined, fd);
-    expect(result.error).toMatch(/invalid slot/i);
+    expect(result).toMatchObject({ error: expect.stringMatching(/invalid slot/i) });
   });
 
   it("deletes stored assets and nulls logo_url", async () => {

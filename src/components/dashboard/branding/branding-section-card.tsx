@@ -1,154 +1,83 @@
-/* eslint-disable @next/next/no-img-element */
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Text } from '@/components/ui/text'
+import { Building2, Image as ImageIcon, Images, LayoutTemplate, Palette, type LucideIcon } from "lucide-react";
 
-import { BrandingRemovableImage } from './branding-removable-image'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
-export interface BrandingSectionRow {
-  label: string
-  value: string | null
-  /** When set, an image preview shows a delete control (storage + DB handled by parent). */
-  onRemove?: () => void | Promise<void>
-}
+import { BrandingSectionCardValue } from "./branding-section-card-value";
+
+const TITLE_ICONS: Partial<Record<string, LucideIcon>> = {
+  Identity: Building2,
+  "Brand colors": Palette,
+  "Core media": ImageIcon,
+  "Additional images": Images,
+};
 
 interface BrandingSectionCardProps {
-  title: string
-  description: string
-  rows: BrandingSectionRow[]
-  /** Shown when `rows` is empty (e.g. optional extras card). */
-  emptyText?: string
-  isImageCard?: boolean
-  onEdit: () => void
-}
-
-function isProbablyImageAssetUrl(text: string): boolean {
-  if (!/^https?:\/\//i.test(text)) return false
-  if (/\.(png|jpe?g|svg)(\?|#|$)/i.test(text)) return true
-  if (/\/object\/public\//i.test(text)) return true
-  return false
+  title: string;
+  description: string;
+  rows: Array<{ label: string; value: string | null; onRemove?: () => void | Promise<void> }>;
+  emptyText?: string;
+  onEdit: () => void;
 }
 
 export function BrandingSectionCard({
   title,
   description,
   rows,
-  emptyText = 'No data available',
+  emptyText = "No data available",
   onEdit,
-  isImageCard = false,
 }: BrandingSectionCardProps) {
-  const populated = rows.filter((r) => !!r.value?.trim()).length
+  const populated = rows.filter((r) => !!r.value?.trim()).length;
+  const SectionIcon = TITLE_ICONS[title] ?? LayoutTemplate;
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-start justify-between gap-3">
-        <div className="space-y-1">
-          <CardTitle>{title}</CardTitle>
-          <Text muted>{description}</Text>
+    <Card
+      className={cn(
+        "group relative overflow-hidden rounded-2xl border-border/70 bg-card/80 shadow-[0_28px_70px_-42px_rgb(37_99_235_/_38%),inset_0_1px_0_rgb(255_255_255_/_14%)] backdrop-blur-[2px] ring-1 ring-black/[0.035] transition-[box-shadow] duration-300 hover:shadow-[0_34px_88px_-42px_rgb(37_99_235_/_42%),inset_0_1px_0_rgb(255_255_255_/_14%)] dark:bg-card/65 dark:ring-white/[0.05]",
+      )}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/[0.35] to-transparent opacity-80"
+        aria-hidden
+      />
+      <CardHeader className="flex-row flex-wrap items-start gap-4 border-b border-border/60 pb-5">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/[0.22] to-primary/[0.06] text-primary shadow-inner ring-1 ring-primary/[0.14]">
+          <SectionIcon className="size-[1.35rem]" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <CardTitle className="text-[1.0625rem] font-semibold tracking-tight text-foreground">{title}</CardTitle>
+            <Badge variant={populated > 0 ? "success" : "secondary"} className="normal-case tabular-nums tracking-normal">
+              {populated > 0 ? "Configured" : "Incomplete"}
+            </Badge>
+          </div>
+          <CardDescription className="text-[0.8125rem] leading-relaxed text-muted-foreground">{description}</CardDescription>
         </div>
-        <Button variant="outline" size="sm" onClick={onEdit}>
-          {populated > 0 ? 'Edit' : 'Add'}
+        <Button variant="default" size="sm" className="ml-auto shrink-0 rounded-lg font-medium shadow-sm" onClick={onEdit}>
+          {populated > 0 ? "Edit" : "Add"}
         </Button>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div
-          className={
-            isImageCard
-              ? 'grid grid-cols-2 items-start gap-3 text-sm'
-              : 'space-y-2'
-          }
-        >
-          {rows.map((row) => (
-            <div
-              key={row.label}
-              className={
-                isImageCard
-                  ? 'flex flex-col gap-2'
-                  : 'grid grid-cols-[8rem_1fr] items-start gap-3 text-sm'
-              }
-            >
-              <span className="text-muted-foreground">{row.label}</span>
-              <ValueCell
-                label={row.label}
-                value={row.value}
-                onRemove={row.onRemove}
-              />
+      <CardContent className="space-y-0 pt-6">
+        {rows.map((row, i) => (
+          <div key={row.label}>
+            {i > 0 ? <Separator className="my-4 bg-border/60" /> : null}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,7.5rem)_1fr] sm:items-start">
+              <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{row.label}</span>
+              <div className="text-sm leading-relaxed">
+                <BrandingSectionCardValue label={row.label} value={row.value} onRemove={row.onRemove} />
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
         {rows.length === 0 ? (
-          <Text muted className="text-sm">
-            {emptyText}
-          </Text>
+          <div className="rounded-xl border border-dashed border-border/80 bg-muted/[0.35] px-5 py-10 text-center">
+            <p className="text-sm italic leading-relaxed text-muted-foreground">{emptyText}</p>
+          </div>
         ) : null}
       </CardContent>
     </Card>
-  )
-}
-
-function ValueCell({
-  label,
-  value,
-  onRemove,
-}: {
-  label: string
-  value: string | null
-  onRemove?: () => void | Promise<void>
-}) {
-  const text = value?.trim()
-  if (!text) return <span className="text-foreground">—</span>
-
-  if (label === 'Primary' || label === 'Secondary' || label === 'Accent') {
-    return (
-      <span className="inline-flex items-center gap-2 text-foreground">
-        <span
-          className="size-4 rounded border border-border"
-          style={{ backgroundColor: text }}
-          aria-hidden
-        />
-        {text}
-      </span>
-    )
-  }
-
-  const previewAlt = `${label} preview`
-  const removeLabel = `Remove ${label} image`
-
-  if (label === 'Logo' || label === 'Icon' || label === 'Hero') {
-    if (!onRemove) {
-      return (
-        <img src={text} alt={previewAlt} className="max-h-24 rounded object-contain" />
-      )
-    }
-
-    return (
-      <BrandingRemovableImage
-        src={text}
-        alt={previewAlt}
-        removeLabel={removeLabel}
-        confirmMessage={`Remove this ${label.toLowerCase()}? The file will be deleted from storage if it was uploaded to DocRail.`}
-        onRemove={onRemove}
-      />
-    )
-  }
-
-  if (isProbablyImageAssetUrl(text)) {
-    if (!onRemove) {
-      return (
-        <img src={text} alt={previewAlt} className="max-h-24 rounded object-contain" />
-      )
-    }
-
-    return (
-      <BrandingRemovableImage
-        src={text}
-        alt={previewAlt}
-        removeLabel={removeLabel}
-        confirmMessage="Remove this image? The file will be deleted from storage if it was uploaded to DocRail."
-        onRemove={onRemove}
-      />
-    )
-  }
-
-  return <span className="truncate text-foreground">{text}</span>
+  );
 }

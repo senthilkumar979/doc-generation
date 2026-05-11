@@ -114,7 +114,7 @@ describe("BrandingAddressesDialog", () => {
     expect(screen.getByRole("button", { name: /update address/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /update address/i }));
-    expect(notifyMocks.success).toHaveBeenCalledWith("Address updated", expect.any(Object));
+    expect(notifyMocks.success).toHaveBeenCalledWith("Address updated");
     expect(refreshMock).toHaveBeenCalled();
   });
 

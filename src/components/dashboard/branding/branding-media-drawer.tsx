@@ -60,16 +60,18 @@ export function BrandingMediaDrawer({ open, onOpenChange, values }: BrandingMedi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto sm:max-w-2xl">
-        <div className="relative">
-          <DialogHeader>
-            <DialogTitle>Brand logo & icon</DialogTitle>
-            <DialogDescription>
+      <DialogContent className="max-h-[85vh] gap-0 overflow-y-auto rounded-2xl border-border/75 p-0 sm:max-w-3xl">
+        <div className="relative border-b border-border/60 bg-muted/[0.35] px-6 py-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" aria-hidden />
+          <DialogHeader className="space-y-2 text-left">
+            <DialogTitle className="text-xl font-semibold tracking-tight">Brand logo & icon</DialogTitle>
+            <DialogDescription className="text-[0.8125rem] leading-relaxed">
               Upload JPEG, JPG, PNG, or SVG images (max {BRAND_IMAGE_MAX_MB} MB each). Choosing a file shows a preview; click Save to upload.
-              Leaving a slot
-              unchanged keeps the current asset.
+              Leaving a slot unchanged keeps the current asset.
             </DialogDescription>
           </DialogHeader>
+        </div>
+        <div className="relative px-6 py-6">
           <form action={onSubmit} className="space-y-6">
             <div className="flex flex-wrap gap-8">
               <UploadSlot
@@ -90,11 +92,11 @@ export function BrandingMediaDrawer({ open, onOpenChange, values }: BrandingMedi
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             ) : null}
-            <DialogFooter>
-              <Button variant="outline" type="button" disabled={busy} onClick={() => onOpenChange(false)}>
+            <DialogFooter className="border-t border-border/60 pt-4 sm:justify-end">
+              <Button variant="outline" type="button" className="rounded-lg" disabled={busy} onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy}>
+              <Button type="submit" className="rounded-lg font-semibold shadow-sm" disabled={busy}>
                 {busy ? (
                   <span className="inline-flex items-center gap-2">
                     <Spinner className="size-4 text-primary-foreground" label="Saving" />
@@ -108,7 +110,7 @@ export function BrandingMediaDrawer({ open, onOpenChange, values }: BrandingMedi
           </form>
           {busy ? (
             <div
-              className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-xl bg-background/80 backdrop-blur-sm"
+              className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm"
               role="progressbar"
               aria-label="Saving to storage"
             >
@@ -181,8 +183,10 @@ function UploadSlot({ resetKey, label, inputName, previewUrl }: UploadSlotProps)
 
   return (
     <div className="space-y-3">
-      <Label htmlFor={`${inputName}-${resetKey}`}>{label}</Label>
-      <div className="flex min-h-[120px] w-full max-w-xs flex-col items-start gap-3 rounded-md border border-dashed border-border bg-muted/30 p-4">
+      <Label htmlFor={`${inputName}-${resetKey}`} className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        {label}
+      </Label>
+      <div className="flex min-h-[136px] w-full max-w-xs flex-col items-start gap-3 rounded-xl border border-dashed border-border/90 bg-muted/[0.25] p-4 shadow-inner ring-1 ring-black/[0.04] dark:ring-white/[0.05]">
         {displaySrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={displaySrc} alt={`Selected ${label}`} className="max-h-24 max-w-full rounded object-contain" />

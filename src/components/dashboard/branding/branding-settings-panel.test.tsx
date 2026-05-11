@@ -19,7 +19,6 @@ vi.mock("@/lib/toast", () => ({
 
 vi.mock("@/actions/upsert-org-brand-profile", () => ({
   upsertOrgBrandProfileSectionAction: vi.fn(),
-  removeOrgBrandCoreMediaAction: vi.fn(),
 }));
 
 vi.mock("@/actions/upsert-org-brand-address", () => ({
@@ -34,7 +33,7 @@ vi.mock("@/actions/upsert-org-brand-image", () => ({
 
 import { deleteOrgBrandAddressAction, upsertOrgBrandAddressAction } from "@/actions/upsert-org-brand-address";
 import { deleteOrgBrandImageAction, upsertOrgBrandImageAction } from "@/actions/upsert-org-brand-image";
-import { removeOrgBrandCoreMediaAction, upsertOrgBrandProfileSectionAction } from "@/actions/upsert-org-brand-profile";
+import { upsertOrgBrandProfileSectionAction } from "@/actions/upsert-org-brand-profile";
 
 import type { OrgBrandImageRow, OrgBrandProfileRow } from "@/lib/branding/org-brand-schema";
 
@@ -58,7 +57,6 @@ function cardRoot(title: string): HTMLElement {
 describe("BrandingSettingsPanel", () => {
   beforeEach(() => {
     vi.mocked(upsertOrgBrandProfileSectionAction).mockResolvedValue({ ok: true });
-    vi.mocked(removeOrgBrandCoreMediaAction).mockResolvedValue({ ok: true });
     vi.mocked(upsertOrgBrandAddressAction).mockResolvedValue({ ok: true });
     vi.mocked(deleteOrgBrandAddressAction).mockResolvedValue({ ok: true });
     vi.mocked(upsertOrgBrandImageAction).mockResolvedValue({ ok: true });
@@ -178,7 +176,8 @@ describe("BrandingSettingsPanel", () => {
 
     render(<BrandingSettingsPanel profile={profile} addresses={[]} images={[]} />);
 
-    expect(screen.getByText("DocRail Demo")).toBeInTheDocument();
-    expect(screen.getByText("#111111")).toBeInTheDocument();
+    expect(within(cardRoot("Identity")).getByText("DocRail Demo")).toBeInTheDocument();
+    expect(within(cardRoot("Brand colors")).getByText("#111111")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Primary: #111111/i)).toBeInTheDocument();
   });
 });
