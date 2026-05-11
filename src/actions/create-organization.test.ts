@@ -1,23 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-import { isNextRedirectError } from "@/lib/next/is-next-redirect-error";
-
-const { mockRevalidatePath, mockRedirect, mockCreateServerSupabase } = vi.hoisted(() => ({
+const { mockRevalidatePath, mockCreateServerSupabase } = vi.hoisted(() => ({
   mockRevalidatePath: vi.fn(),
-  mockRedirect: vi.fn((url: string) => {
-    throw Object.assign(new Error("NEXT_REDIRECT"), {
-      digest: `NEXT_REDIRECT;replace;${url};`,
-    });
-  }),
   mockCreateServerSupabase: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({
   revalidatePath: mockRevalidatePath,
-}));
-
-vi.mock("next/navigation", () => ({
-  redirect: mockRedirect,
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -37,8 +26,7 @@ function mockSupabaseChain(overrides: {
   orgResult?: { data: { id: string } | null; error: { message: string } | null };
   memberError?: { message: string } | null;
 }) {
-  const user =
-    overrides.user === undefined ? { id: "user-1" } : overrides.user;
+  const user = overrides.user === undefined ? { id: "user-1" } : overrides.user;
   const orgResult = overrides.orgResult ?? {
     data: { id: "org-1" },
     error: null,
@@ -111,14 +99,12 @@ describe("createOrganizationAction", () => {
     expect(result.error).toBe("membership failed");
   });
 
-  it("revalidates and redirects on success", async () => {
+  it("revalidates and returns ok on success", async () => {
     mockCreateServerSupabase.mockResolvedValue(mockSupabaseChain({}));
 
-    await expect(
-      createOrganizationAction(undefined, formWithName("My Org")),
-    ).rejects.toSatisfy(isNextRedirectError);
+    const result = await createOrganizationAction(undefined, formWithName("My Org"));
 
+    expect(result).toEqual({ ok: true });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/dashboard");
-    expect(mockRedirect).toHaveBeenCalledWith("/dashboard");
   });
 });

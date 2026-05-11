@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { type OrgBrandAddressRow, type OrgBrandImageRow, type OrgBrandProfileRow, rowToFormValues } from "@/lib/branding/org-brand-schema";
 
-import { BrandingAddressesDialog } from "./branding-addresses-dialog";
+import { BrandingAddressPanel } from "./branding-address-panel";
 import { BrandingEditDialog } from "./branding-edit-dialog";
 import { BrandingImagesDrawer } from "./branding-images-drawer";
 import { BrandingMediaDrawer } from "./branding-media-drawer";
@@ -45,18 +45,7 @@ export function BrandingSettingsPanel({ profile, addresses, images }: BrandingSe
           ]}
           onEdit={() => setOpenSection("colors")}
         />
-        <div className="col-span-2">
-        <BrandingSectionCard
-          title="Addresses"
-          description="Multiple postal addresses for invoices, legal docs, and regional operations."
-            rows={ addresses?.map((a) => ({
-              label: a.label ?? "New Address",
-              value: [a.address_line1, a.city, a.country].filter(Boolean).join(", "),
-            })) ?? []}
-            emptyText="No addresses added yet"
-            onEdit={() => setOpenSection("addresses")}
-          />
-        </div>
+        <BrandingAddressPanel addresses={addresses} />
         <BrandingSectionCard
           title="Core media"
           description="Logo and icon used in nav, templates, and exports."
@@ -107,11 +96,6 @@ export function BrandingSettingsPanel({ profile, addresses, images }: BrandingSe
           { name: "secondaryColor", label: "Secondary color" },
           { name: "accentColor", label: "Accent color" },
         ]}
-      />
-      <BrandingAddressesDialog
-        open={openSection === "addresses"}
-        onOpenChange={(open) => setOpenSection(open ? "addresses" : null)}
-        addresses={addresses}
       />
       <BrandingMediaDrawer
         open={openSection === "media"}

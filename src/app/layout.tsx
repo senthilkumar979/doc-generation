@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Suspense } from 'react'
 
 import { RouteProgressProvider } from '@/components/navigation/route-progress-provider'
+import { GooeyToaster } from '@/components/ui/gooey-toaster'
 
 import './globals.css'
 
@@ -37,6 +38,7 @@ export default function RootLayout({
             <div className="flex flex-1 flex-col">{children}</div>
           </RouteProgressProvider>
         </Suspense>
+        <GooeyToaster />
       </body>
     </html>
   )

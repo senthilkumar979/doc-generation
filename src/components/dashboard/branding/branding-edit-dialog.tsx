@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { BrandingSection } from "@/actions/upsert-org-brand-profile";
 import { upsertOrgBrandProfileSectionAction } from "@/actions/upsert-org-brand-profile";
+import { notify } from "@/lib/toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -37,6 +39,7 @@ export function BrandingEditDialog({
   fields,
   values,
 }: BrandingEditDialogProps) {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -47,9 +50,14 @@ export function BrandingEditDialog({
     const result = await upsertOrgBrandProfileSectionAction(undefined, formData);
     setSaving(false);
     if ("error" in result) {
+      notify.error("Could not save branding", { description: result.error });
       setError(result.error);
       return;
     }
+    if (section === "identity") notify.success("Identity updated");
+    else if (section === "colors") notify.success("Brand colors updated");
+    else notify.success("Core media URLs updated");
+    router.refresh();
     onOpenChange(false);
   }
 

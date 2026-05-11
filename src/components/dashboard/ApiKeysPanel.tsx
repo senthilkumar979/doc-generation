@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,6 +18,8 @@ import { Heading } from "@/components/ui/heading";
 import { InlineCode } from "@/components/ui/inline-code";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+
+import { notify } from "@/lib/toast";
 
 import { buildApiKeyColumns } from "./api-keys-columns";
 import type { ApiKeyListItem } from "./api-key-types";
@@ -34,6 +37,7 @@ const createKeySchema = z.object({
 type CreateKeyForm = z.infer<typeof createKeySchema>;
 
 export function ApiKeysPanel({ keys }: ApiKeysPanelProps) {
+  const router = useRouter();
   const [createFatal, setCreateFatal] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<CreateApiKeyResult["revealed"]>();
   const [revokeFatal, setRevokeFatal] = useState<string | null>(null);
@@ -52,8 +56,14 @@ export function ApiKeysPanel({ keys }: ApiKeysPanelProps) {
     fd.set("id", id);
     const result = await revokeApiKeyAction(undefined, fd);
     setRevokePending(null);
-    if (result.error) setRevokeFatal(result.error);
-  }, []);
+    if (result.error) {
+      notify.error("Could not revoke API key", { description: result.error });
+      setRevokeFatal(result.error);
+    } else {
+      notify.success("API key revoked", { description: "It no longer works for authentication." });
+      router.refresh();
+    }
+  }, [router]);
 
   async function onCreate(values: CreateKeyForm) {
     setCreateFatal(null);
@@ -61,12 +71,17 @@ export function ApiKeysPanel({ keys }: ApiKeysPanelProps) {
     fd.set("name", values.name);
     const result = await createApiKeyAction(undefined, fd);
     if (result.error) {
+      notify.error("Could not create API key", { description: result.error });
       setCreateFatal(result.error);
       return;
     }
     if (result.revealed) {
+      notify.success("API key created", {
+        description: "Copy the secret now — it is only shown once.",
+      });
       setRevealed(result.revealed);
       form.reset({ name: "" });
+      router.refresh();
     }
   }
 

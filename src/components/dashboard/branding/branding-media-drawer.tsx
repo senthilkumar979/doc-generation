@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { upsertOrgBrandProfileSectionAction } from "@/actions/upsert-org-brand-profile";
+import { notify } from "@/lib/toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +18,7 @@ interface BrandingMediaDrawerProps {
 }
 
 export function BrandingMediaDrawer({ open, onOpenChange, values }: BrandingMediaDrawerProps) {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -26,9 +29,12 @@ export function BrandingMediaDrawer({ open, onOpenChange, values }: BrandingMedi
     const result = await upsertOrgBrandProfileSectionAction(undefined, formData);
     setSaving(false);
     if ("error" in result) {
+      notify.error("Could not save logo or icon", { description: result.error });
       setError(result.error);
       return;
     }
+    notify.success("Core media updated", { description: "Logo and icon URLs saved." });
+    router.refresh();
     onOpenChange(false);
   }
 

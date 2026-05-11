@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { createTemplateAction } from "@/actions/create-template";
+import { notify } from "@/lib/toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,9 +35,11 @@ export function TemplateComposer() {
     const result = await createTemplateAction(undefined, fd);
     setPending(false);
     if (result.error) {
+      notify.error("Could not create template", { description: result.error });
       setError(result.error);
       return;
     }
+    notify.success("Template created");
     form.reset();
     router.refresh();
   }

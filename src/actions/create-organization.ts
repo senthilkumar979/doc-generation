@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -12,6 +11,7 @@ const nameSchema = z.object({
 
 export interface ActionResult {
   error?: string;
+  ok?: true;
 }
 
 export async function createOrganizationAction(
@@ -44,5 +44,5 @@ export async function createOrganizationAction(
   if (memberError) return { error: memberError.message };
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  return { ok: true };
 }

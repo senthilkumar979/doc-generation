@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
+import { notify } from "@/lib/toast";
 
 const schema = z
   .object({
@@ -25,7 +26,6 @@ type Schema = z.infer<typeof schema>;
 
 export function ChangePasswordForm() {
   const [fatal, setFatal] = useState<string | null>(null);
-  const [ok, setOk] = useState<string | null>(null);
   const form = useForm<Schema>({
     resolver: zodResolver(schema),
     defaultValues: { newPassword: "", confirmPassword: "" },
@@ -34,18 +34,20 @@ export function ChangePasswordForm() {
 
   async function onSubmit(values: Schema) {
     setFatal(null);
-    setOk(null);
     try {
       const supabase = createBrowserSupabase();
       const { error } = await supabase.auth.updateUser({ password: values.newPassword });
       if (error) {
+        notify.error("Could not update password", { description: error.message });
         setFatal(error.message);
         return;
       }
-      setOk("Password updated. You remain signed in on this device.");
+      notify.success("Password updated", { description: "You remain signed in on this device." });
       form.reset({ newPassword: "", confirmPassword: "" });
     } catch (e) {
-      setFatal(e instanceof Error ? e.message : "Could not update password.");
+      const msg = e instanceof Error ? e.message : "Could not update password.";
+      notify.error("Could not update password", { description: msg });
+      setFatal(msg);
     }
   }
 
@@ -81,11 +83,6 @@ export function ChangePasswordForm() {
         {fatal ? (
           <Alert variant="destructive">
             <AlertDescription>{fatal}</AlertDescription>
-          </Alert>
-        ) : null}
-        {ok ? (
-          <Alert variant="success">
-            <AlertDescription>{ok}</AlertDescription>
           </Alert>
         ) : null}
         <Button type="submit" disabled={form.formState.isSubmitting}>

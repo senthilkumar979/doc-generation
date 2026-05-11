@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { isNextRedirectError } from "@/lib/next/is-next-redirect-error";
+import { notify } from "@/lib/toast";
 
 const schema = z.object({
   name: z.string().min(2, "Use at least 2 characters.").max(120),
@@ -20,6 +21,7 @@ const schema = z.object({
 type Schema = z.infer<typeof schema>;
 
 export function OnboardingForm() {
+  const router = useRouter();
   const [fatal, setFatal] = useState<string | null>(null);
   const form = useForm<Schema>({
     resolver: zodResolver(schema),
@@ -35,11 +37,19 @@ export function OnboardingForm() {
     try {
       const result = await createOrganizationAction(undefined, fd);
       if (result?.error) {
+        notify.error("Could not create organization", { description: result.error });
         setFatal(result.error);
+      } else if (result?.ok) {
+        notify.success("Organization ready", {
+          description: "You’ll land on the dashboard in a moment.",
+        });
+        router.push("/dashboard");
+        router.refresh();
       }
     } catch (err) {
-      if (isNextRedirectError(err)) throw err;
-      setFatal(err instanceof Error ? err.message : "Something went wrong");
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      notify.error("Something went wrong", { description: msg });
+      setFatal(msg);
     }
   }
 

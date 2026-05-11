@@ -1,10 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { deleteOrgBrandImageAction, upsertOrgBrandImageAction } from "@/actions/upsert-org-brand-image";
 import type { OrgBrandImageRow } from "@/lib/branding/org-brand-schema";
+import { notify } from "@/lib/toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,6 +20,7 @@ interface BrandingImagesDrawerProps {
 }
 
 export function BrandingImagesDrawer({ open, onOpenChange, images }: BrandingImagesDrawerProps) {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -28,7 +31,14 @@ export function BrandingImagesDrawer({ open, onOpenChange, images }: BrandingIma
     setError(null);
     const result = await upsertOrgBrandImageAction(undefined, formData);
     setSaving(false);
-    if ("error" in result) setError(result.error);
+    if ("error" in result) {
+      notify.error("Could not save image", { description: result.error });
+      setError(result.error);
+      return;
+    }
+    notify.success(formData.get("id") ? "Additional image updated" : "Additional image added");
+    setEditing(null);
+    router.refresh();
   }
 
   async function onDelete(id: string) {
@@ -38,7 +48,13 @@ export function BrandingImagesDrawer({ open, onOpenChange, images }: BrandingIma
     formData.set("id", id);
     const result = await deleteOrgBrandImageAction(undefined, formData);
     setDeletingId(null);
-    if ("error" in result) setError(result.error);
+    if ("error" in result) {
+      notify.error("Could not remove image", { description: result.error });
+      setError(result.error);
+      return;
+    }
+    notify.success("Additional image removed");
+    router.refresh();
   }
 
   return (

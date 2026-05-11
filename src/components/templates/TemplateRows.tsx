@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import type { TemplateType } from "@/lib/templates/constants";
 import { letterPayloadSchema } from "@/lib/templates/payload-schema";
+import { notify } from "@/lib/toast";
 
 import { LetterPdfPreview } from "./LetterPdfPreview";
 import type { TemplateRowDto } from "./template-row-dto";
@@ -32,9 +33,11 @@ export function TemplateRows({ templates }: TemplateRowsProps) {
     setActionError(null);
     const result: TemplateActionResult = await updateTemplateAction(undefined, new FormData(form));
     if (result.error) {
+      notify.error("Could not update template", { description: result.error });
       setActionError(result.error);
       return;
     }
+    notify.success("Template updated");
     setEditId(null);
     router.refresh();
   }
@@ -46,9 +49,11 @@ export function TemplateRows({ templates }: TemplateRowsProps) {
     fd.set("id", id);
     const result = await deleteTemplateAction(undefined, fd);
     if (result.error) {
+      notify.error("Could not delete template", { description: result.error });
       setActionError(result.error);
       return;
     }
+    notify.success("Template deleted");
     setPreviewId(null);
     setEditId(null);
     router.refresh();
