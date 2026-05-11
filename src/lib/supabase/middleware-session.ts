@@ -15,7 +15,7 @@ export async function updateSession(
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet, headers) {
+      setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => {
           request.cookies.set(name, value);
         });
@@ -23,11 +23,6 @@ export async function updateSession(
         cookiesToSet.forEach(({ name, value, options }) => {
           supabaseResponse.cookies.set(name, value, options);
         });
-        if (headers) {
-          Object.entries(headers).forEach(([key, value]) => {
-            if (typeof value === "string") supabaseResponse.headers.set(key, value);
-          });
-        }
       },
     },
   });
