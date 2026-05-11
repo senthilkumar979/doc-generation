@@ -1,13 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { deleteOrgBrandImageAction } from "@/actions/upsert-org-brand-image";
+import { removeOrgBrandCoreMediaAction } from "@/actions/upsert-org-brand-profile";
 import { type OrgBrandAddressRow, type OrgBrandImageRow, type OrgBrandProfileRow, rowToFormValues } from "@/lib/branding/org-brand-schema";
+import { notify } from "@/lib/toast";
 
 import { BrandingAddressPanel } from "./branding-address-panel";
 import { BrandingEditDialog } from "./branding-edit-dialog";
 import { BrandingImagesDrawer } from "./branding-images-drawer";
 import { BrandingMediaDrawer } from "./branding-media-drawer";
+import type { BrandingSectionRow } from "./branding-section-card";
 import { BrandingSectionCard } from "./branding-section-card";
 
 interface BrandingSettingsPanelProps {
@@ -17,8 +22,70 @@ interface BrandingSettingsPanelProps {
 }
 
 export function BrandingSettingsPanel({ profile, addresses, images }: BrandingSettingsPanelProps) {
+  const router = useRouter();
   const values = useMemo(() => rowToFormValues(profile), [profile]);
   const [openSection, setOpenSection] = useState<"identity" | "colors" | "media" | "images" | null>(null);
+
+  async function removeCoreMediaSlot(slot: "logo" | "icon") {
+    const fd = new FormData();
+    fd.set("slot", slot);
+    const result = await removeOrgBrandCoreMediaAction(undefined, fd);
+    if ("error" in result) {
+      notify.error("Could not remove image", { description: result.error });
+      return;
+    }
+    notify.success(slot === "logo" ? "Logo removed" : "Icon removed");
+    router.refresh();
+  }
+
+  async function removeFirstAdditionalImage() {
+    const first = images[0];
+    if (!first?.id) return;
+    const fd = new FormData();
+    fd.set("id", first.id);
+    const result = await deleteOrgBrandImageAction(undefined, fd);
+    if ("error" in result) {
+      notify.error("Could not remove image", { description: result.error });
+      return;
+    }
+    notify.success("Image removed");
+    router.refresh();
+  }
+
+  const coreMediaRows: BrandingSectionRow[] =
+    values.logoUrl || values.iconUrl
+      ? [
+          {
+            label: "Logo",
+            value: values.logoUrl ?? null,
+            ...(values.logoUrl?.trim()
+              ? { onRemove: () => removeCoreMediaSlot("logo") }
+              : {}),
+          },
+          {
+            label: "Icon",
+            value: values.iconUrl ?? null,
+            ...(values.iconUrl?.trim()
+              ? { onRemove: () => removeCoreMediaSlot("icon") }
+              : {}),
+          },
+        ]
+      : [];
+
+  const additionalImageRows: BrandingSectionRow[] =
+    images.length > 0
+      ? [
+          {
+            label: images[0]?.label?.trim()
+              ? String(images[0].label)
+              : "Untitled image",
+            value: images[0]?.image_url ?? null,
+            ...(images[0]?.image_url?.trim()
+              ? { onRemove: removeFirstAdditionalImage }
+              : {}),
+          },
+        ]
+      : [];
 
   return (
     <>
@@ -50,14 +117,7 @@ export function BrandingSettingsPanel({ profile, addresses, images }: BrandingSe
           title="Core media"
           isImageCard={true}
           description="Logo and icon used in nav, templates, and exports."
-          rows={
-            values.logoUrl || values.iconUrl
-              ? [
-                  { label: "Logo", value: values.logoUrl },
-                  { label: "Icon", value: values.iconUrl },
-                ]
-              : []
-          }
+          rows={coreMediaRows}
           emptyText="No media added yet"
           onEdit={() => setOpenSection("media")}
         />
@@ -65,16 +125,7 @@ export function BrandingSettingsPanel({ profile, addresses, images }: BrandingSe
           title="Additional images"
           description="Extra visual assets like hero, banner, cover, etc."
           isImageCard={true}
-          rows={
-            images.length > 0
-              ? [
-                  {
-                    label: images[0]?.label?.trim() ? (images[0].label as string) : "Untitled image",
-                    value: images[0]?.image_url ?? null,
-                  },
-                ]
-              : []
-          }
+          rows={additionalImageRows}
           emptyText="No images added yet"
           onEdit={() => setOpenSection("images")}
         />

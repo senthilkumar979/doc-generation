@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { replaceIcon, replaceLogo } from "@/lib/branding/brand-assets-storage";
+import { deleteStoredAssetIfOwned, replaceIcon, replaceLogo } from "@/lib/branding/brand-assets-storage";
 import { pickBrandingUploadFromFormData, validateBrandImageFileForUpload } from "@/lib/branding/brand-image-accept";
 import { fetchFirstOrgIdForUser } from "@/lib/orgs/first-org-id";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -22,6 +22,43 @@ async function getScopedContext() {
   if (!orgId) return { error: "Create an organization first." } as const;
 
   return { supabase, orgId } as const;
+}
+
+export async function removeOrgBrandCoreMediaAction(
+  _prev: BrandingActionResult | undefined,
+  formData: FormData,
+): Promise<BrandingActionResult> {
+  const scoped = await getScopedContext();
+  if ("error" in scoped) return { error: scoped.error ?? "Unable to resolve organization." };
+
+  const slot = formData.get("slot");
+  if (slot !== "logo" && slot !== "icon") {
+    return { error: "Invalid slot." };
+  }
+
+  const column = slot === "logo" ? ("logo_url" as const) : ("icon_url" as const);
+
+  const { data: row } = await scoped.supabase
+    .from("org_brand_profiles")
+    .select("logo_url, icon_url")
+    .eq("org_id", scoped.orgId)
+    .maybeSingle();
+
+  const currentUrl = slot === "logo" ? row?.logo_url : row?.icon_url;
+
+  await deleteStoredAssetIfOwned(scoped.supabase, currentUrl);
+
+  const now = new Date().toISOString();
+
+  const { error } = await scoped.supabase
+    .from("org_brand_profiles")
+    .update({ [column]: null, updated_at: now })
+    .eq("org_id", scoped.orgId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/settings/branding");
+  return { ok: true };
 }
 
 export async function upsertOrgBrandProfileSectionAction(

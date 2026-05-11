@@ -7,7 +7,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BrandingSectionCard } from "./branding-section-card";
 
 describe("BrandingSectionCard", () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
 
   it('labels the action "Add" when no row values exist', async () => {
     const user = userEvent.setup();
@@ -65,6 +68,34 @@ describe("BrandingSectionCard", () => {
       "src",
       "https://cdn.example/logo.png",
     );
+  });
+
+  it("invokes onRemove after confirming the destructive control", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    const onRemove = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <BrandingSectionCard
+        title="Media"
+        description="Logo"
+        rows={[
+          {
+            label: "Logo",
+            value: "https://cdn.example/logo.png",
+            onRemove,
+          },
+        ]}
+        onEdit={vi.fn()}
+      />,
+    );
+
+    const preview = screen.getByRole("img", { name: "Logo preview" });
+    await user.hover(preview.parentElement ?? preview);
+
+    await user.click(screen.getByRole("button", { name: /remove logo image/i }));
+
+    expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
   it("shows muted empty copy when rows are empty", () => {

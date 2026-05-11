@@ -3,10 +3,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 
+import { BrandingRemovableImage } from './branding-removable-image'
+
+export interface BrandingSectionRow {
+  label: string
+  value: string | null
+  /** When set, an image preview shows a delete control (storage + DB handled by parent). */
+  onRemove?: () => void | Promise<void>
+}
+
 interface BrandingSectionCardProps {
   title: string
   description: string
-  rows: Array<{ label: string; value: string | null }>
+  rows: BrandingSectionRow[]
   /** Shown when `rows` is empty (e.g. optional extras card). */
   emptyText?: string
   isImageCard?: boolean
@@ -59,7 +68,11 @@ export function BrandingSectionCard({
               }
             >
               <span className="text-muted-foreground">{row.label}</span>
-              <ValueCell label={row.label} value={row.value} />
+              <ValueCell
+                label={row.label}
+                value={row.value}
+                onRemove={row.onRemove}
+              />
             </div>
           ))}
         </div>
@@ -73,7 +86,15 @@ export function BrandingSectionCard({
   )
 }
 
-function ValueCell({ label, value }: { label: string; value: string | null }) {
+function ValueCell({
+  label,
+  value,
+  onRemove,
+}: {
+  label: string
+  value: string | null
+  onRemove?: () => void | Promise<void>
+}) {
   const text = value?.trim()
   if (!text) return <span className="text-foreground">—</span>
 
@@ -90,22 +111,41 @@ function ValueCell({ label, value }: { label: string; value: string | null }) {
     )
   }
 
+  const previewAlt = `${label} preview`
+  const removeLabel = `Remove ${label} image`
+
   if (label === 'Logo' || label === 'Icon' || label === 'Hero') {
+    if (!onRemove) {
+      return (
+        <img src={text} alt={previewAlt} className="max-h-24 rounded object-contain" />
+      )
+    }
+
     return (
-      <img
+      <BrandingRemovableImage
         src={text}
-        alt={`${label} preview`}
-        className="max-h-24 rounded object-contain"
+        alt={previewAlt}
+        removeLabel={removeLabel}
+        confirmMessage={`Remove this ${label.toLowerCase()}? The file will be deleted from storage if it was uploaded to DocRail.`}
+        onRemove={onRemove}
       />
     )
   }
 
   if (isProbablyImageAssetUrl(text)) {
+    if (!onRemove) {
+      return (
+        <img src={text} alt={previewAlt} className="max-h-24 rounded object-contain" />
+      )
+    }
+
     return (
-      <img
+      <BrandingRemovableImage
         src={text}
-        alt={`${label} preview`}
-        className="max-h-24 rounded object-contain"
+        alt={previewAlt}
+        removeLabel={removeLabel}
+        confirmMessage="Remove this image? The file will be deleted from storage if it was uploaded to DocRail."
+        onRemove={onRemove}
       />
     )
   }

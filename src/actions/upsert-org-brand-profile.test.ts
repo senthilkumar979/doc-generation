@@ -19,12 +19,14 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/branding/brand-assets-storage", () => ({
   replaceLogo: vi.fn(),
   replaceIcon: vi.fn(),
+  deleteStoredAssetIfOwned: vi.fn(),
 }));
 
+import { deleteStoredAssetIfOwned } from "@/lib/branding/brand-assets-storage";
 import { fetchFirstOrgIdForUser } from "@/lib/orgs/first-org-id";
 import { createServerSupabase } from "@/lib/supabase/server";
 
-import { upsertOrgBrandProfileSectionAction } from "./upsert-org-brand-profile";
+import { removeOrgBrandCoreMediaAction, upsertOrgBrandProfileSectionAction } from "./upsert-org-brand-profile";
 
 describe("upsertOrgBrandProfileSectionAction", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -137,5 +139,49 @@ describe("upsertOrgBrandProfileSectionAction", () => {
 
     const result = await upsertOrgBrandProfileSectionAction(undefined, fd);
     expect(result).toEqual({ error: "rls" });
+  });
+});
+
+describe("removeOrgBrandCoreMediaAction", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rejects invalid slot values", async () => {
+    vi.mocked(createServerSupabase).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }) },
+    } as never);
+    vi.mocked(fetchFirstOrgIdForUser).mockResolvedValue("org-1");
+
+    const fd = new FormData();
+    fd.set("slot", "banner");
+    const result = await removeOrgBrandCoreMediaAction(undefined, fd);
+    expect(result.error).toMatch(/invalid slot/i);
+  });
+
+  it("deletes stored assets and nulls logo_url", async () => {
+    const url = "https://proj.supabase.co/storage/v1/object/public/org-brand-assets/org-9/brand/logo.png";
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: { logo_url: url, icon_url: null },
+    });
+    const updateEq = vi.fn().mockResolvedValue({ error: null });
+    vi.mocked(createServerSupabase).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }) },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({ maybeSingle }),
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: updateEq,
+        }),
+      }),
+    } as never);
+    vi.mocked(fetchFirstOrgIdForUser).mockResolvedValue("org-9");
+
+    const fd = new FormData();
+    fd.set("slot", "logo");
+    const result = await removeOrgBrandCoreMediaAction(undefined, fd);
+
+    expect(result).toEqual({ ok: true });
+    expect(vi.mocked(deleteStoredAssetIfOwned)).toHaveBeenCalledWith(expect.anything(), url);
+    expect(updateEq).toHaveBeenCalledWith("org_id", "org-9");
   });
 });
