@@ -32,6 +32,8 @@ Open **SQL Editor** in the Supabase dashboard and run:
 
 2. `supabase/migrations/20250511140000_fix_organization_rls_recursion.sql` — **only if** you previously applied an **older** copy of (1), or you still see RLS recursion on onboarding (`organizations` or `organization_members`). It defines `public.is_organization_member` as **`LANGUAGE plpgsql` SECURITY DEFINER** (simple `LANGUAGE sql` definitions can be **inlined** into policies so the membership scan runs as your user and RLS recurses). The function also disables `row_security` for that lookup. Then it recreates org/member policies (including `organizations_select_as_member` via the helper, not a subquery on `organization_members`).
 
+3. `supabase/migrations/20250511153000_api_keys.sql` — org-scoped `api_keys` (hashed secret + prefix); RLS requires `public.is_organization_member`. Required for **Dashboard → API keys** (`/dashboard/api-keys`).
+
 Or use the Supabase CLI (`supabase db push`) after linking the project.
 
 If Postgres rejects `execute function` in the auth trigger, replace it with `execute procedure public.handle_new_user()` for older versions.

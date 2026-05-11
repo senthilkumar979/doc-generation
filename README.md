@@ -18,7 +18,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Public **release notes** live at [/releases](http://localhost:3000/releases) (no login).
 
-**Authentication:** [docs/SUPABASE.md](docs/SUPABASE.md) — migrations, env vars, and email confirmation notes.
+**Authentication:** [docs/SUPABASE.md](docs/SUPABASE.md) — migrations (including org-scoped **API keys**), env vars, and email confirmation notes. After onboarding, open **Dashboard → API keys**.
 
 ## Scripts
 
