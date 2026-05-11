@@ -39,6 +39,8 @@ export const settingsNavConfig: SettingsNavGroup[] = [
     title: "Configuration",
     items: [
       { href: "/dashboard/settings/general", label: "General" },
+      { href: "/dashboard/settings/branding", label: "Branding" },
+      { href: "/dashboard/settings/password", label: "Password" },
       { href: "/dashboard/settings/api-keys", label: "API keys" },
       { href: "/dashboard/settings/integrations", label: "Integrations" },
       { href: "/dashboard/settings/users", label: "Users" },
@@ -46,9 +48,6 @@ export const settingsNavConfig: SettingsNavGroup[] = [
   },
   {
     title: "Billing",
-    items: [
-      { href: "/dashboard/settings/billing", label: "Subscription" },
-      { href: "/dashboard/settings/usage", label: "Usage" }
-    ],
+    items: [{ href: "/dashboard/settings/billing", label: "Subscription & usage" }],
   },
 ];
