@@ -85,6 +85,40 @@ describe("isInternalRouteChangeClick", () => {
     expect(isInternalRouteChangeClick(blank, ev)).toBe(false);
   });
 
+  it("returns false unless the DOM event represents a bare primary-button click", () => {
+    vi.stubGlobal("location", {
+      href: "https://example.org/here",
+      origin: "https://example.org",
+      pathname: "/here",
+      search: "",
+    } as Location);
+
+    const link = anchor("/somewhere");
+
+    let ev = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
+    ev.preventDefault();
+    expect(isInternalRouteChangeClick(link, ev)).toBe(false);
+
+    ev = new MouseEvent("pointerdown", { bubbles: true, cancelable: true, button: 0 });
+    expect(isInternalRouteChangeClick(link, ev)).toBe(false);
+
+    ev = new MouseEvent("click", { bubbles: true, cancelable: true, button: 1 });
+    expect(isInternalRouteChangeClick(link, ev)).toBe(false);
+  });
+
+  it("returns false for cross-origin hrefs", () => {
+    vi.stubGlobal("location", {
+      href: "https://example.org/here",
+      origin: "https://example.org",
+      pathname: "/here",
+      search: "",
+    } as Location);
+
+    const outer = anchor("https://other.example/route");
+    const ev = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
+    expect(isInternalRouteChangeClick(outer, ev)).toBe(false);
+  });
+
   it("returns false when resolving the href throws", () => {
     vi.stubGlobal("location", {
       href: "https://example.org/dashboard",
