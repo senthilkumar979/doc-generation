@@ -17,6 +17,11 @@ describe("api-keys secret helpers", () => {
     expect(formatApiKeyPrefix(long)).toHaveLength(API_KEY_PREFIX_DISPLAY_LEN);
   });
 
+  it("returns full string when already short", () => {
+    const short = "docr_live_xx";
+    expect(formatApiKeyPrefix(short)).toBe(short);
+  });
+
   it("buildApiKeyPlaintext includes prefix and non-trivial suffix", () => {
     const plaintext = buildApiKeyPlaintext();
     expect(plaintext.startsWith("docr_live_")).toBe(true);

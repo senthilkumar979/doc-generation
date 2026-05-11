@@ -43,9 +43,15 @@ export default async function DashboardPage() {
           </Link>
           <span className="text-zinc-600 dark:text-zinc-400"> — create and revoke keys for the render API.</span>
         </li>
+        <li>
+          <Link href="/dashboard/templates" className="font-medium text-zinc-900 underline dark:text-zinc-50">
+            Templates
+          </Link>
+          <span className="text-zinc-600 dark:text-zinc-400"> — blank or letter payloads with PDF preview.</span>
+        </li>
       </ul>
       <p className="mt-6 text-sm text-zinc-700 dark:text-zinc-300">
-        Next: templates and document rendering milestones.
+        Next: REST render API (`/api/v1`) wired to templates and Trigger.dev PDF jobs.
       </p>
     </main>
   );

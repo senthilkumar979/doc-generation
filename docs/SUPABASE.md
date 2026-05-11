@@ -34,6 +34,8 @@ Open **SQL Editor** in the Supabase dashboard and run:
 
 3. `supabase/migrations/20250511153000_api_keys.sql` — org-scoped `api_keys` (hashed secret + prefix); RLS requires `public.is_organization_member`. Required for **Dashboard → API keys** (`/dashboard/api-keys`).
 
+4. `supabase/migrations/20250511160000_templates.sql` — org-scoped `templates` (`blank` \| `letter` + JSON `payload`); RLS same as API keys. Required for **Dashboard → Templates** (`/dashboard/templates`).
+
 Or use the Supabase CLI (`supabase db push`) after linking the project.
 
 If Postgres rejects `execute function` in the auth trigger, replace it with `execute procedure public.handle_new_user()` for older versions.
