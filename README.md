@@ -11,11 +11,14 @@ API-first document generation: templates, PDFs, org branding, and delivery—bui
 
 ```bash
 npm ci
-cp .env.example .env.local   # when env template exists
+cp .env.example .env.local
+# Edit .env.local with your Supabase URL + publishable (or legacy anon) key — see docs/SUPABASE.md
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Public **release notes** live at [/releases](http://localhost:3000/releases) (no login).
+
+**Authentication:** [docs/SUPABASE.md](docs/SUPABASE.md) — migrations, env vars, and email confirmation notes.
 
 ## Scripts
 
