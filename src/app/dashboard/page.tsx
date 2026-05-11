@@ -51,7 +51,7 @@ export default async function DashboardPage() {
         </li>
       </ul>
       <p className="mt-6 text-sm text-zinc-700 dark:text-zinc-300">
-        Next: REST render API (`/api/v1`) wired to templates and Trigger.dev PDF jobs.
+        Next: Trigger.dev-backed PDF renders for `/api/v1/documents/render`, then Stripe limits.
       </p>
     </main>
   );

@@ -23,6 +23,7 @@ Copy `.env.example` to `.env.local` and set:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` **or** `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only; needed for `/api/v1` once you call the REST API)
 
 ## 4. Apply the database migrations
 
@@ -36,11 +37,23 @@ Open **SQL Editor** in the Supabase dashboard and run:
 
 4. `supabase/migrations/20250511160000_templates.sql` — org-scoped `templates` (`blank` \| `letter` + JSON `payload`); RLS same as API keys. Required for **Dashboard → Templates** (`/dashboard/templates`).
 
+5. `supabase/migrations/20250511170000_api_usage_logs.sql` — `api_usage_logs` plus an index on active `api_keys.key_prefix` (for `/api/v1` lookups via the service role). Rows are written from Next **server** code only.
+
 Or use the Supabase CLI (`supabase db push`) after linking the project.
 
 If Postgres rejects `execute function` in the auth trigger, replace it with `execute procedure public.handle_new_user()` for older versions.
 
-## 5. Auth settings
+## 5. REST API (`/api/v1`) and service role key
+
+The public app uses the **publishable / anon** keys. Programmatic access uses **Dashboard → API keys**: send `Authorization: Bearer <full_plaintext_key>` to `/api/v1/...`.
+
+Configure **`.env.local`** with:
+
+- **`SUPABASE_SERVICE_ROLE_KEY`** — from **Project Settings → API** (keep server-only; never `NEXT_PUBLIC_*`).
+
+Without it, `/api/v1` returns **503** and cannot verify keys or write usage logs.
+
+## 6. Auth settings
 
 For local development you may disable **email confirmations** under **Authentication → Providers → Email** so `signUp` returns a session immediately.
 

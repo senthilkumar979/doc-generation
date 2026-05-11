@@ -18,7 +18,13 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Public **release notes** live at [/releases](http://localhost:3000/releases) (no login).
 
-**Authentication:** [docs/SUPABASE.md](docs/SUPABASE.md) — migrations (orgs, **API keys**, **templates**), env vars, and email confirmation notes. After onboarding, use **Dashboard → API keys** and **Dashboard → Templates**.
+**Authentication:** [docs/SUPABASE.md](docs/SUPABASE.md) — migrations (orgs, **API keys**, **templates**, **usage logs**), env vars (including **`SUPABASE_SERVICE_ROLE_KEY`** for `/api/v1`), and email confirmation notes. After onboarding, use **Dashboard → API keys** and **Dashboard → Templates**.
+
+**REST API (v1):** `Authorization: Bearer <api_key_plaintext>`.
+
+```bash
+curl -s -H "Authorization: Bearer YOUR_KEY" http://localhost:3000/api/v1/templates | jq .
+```
 
 ## Scripts
 
