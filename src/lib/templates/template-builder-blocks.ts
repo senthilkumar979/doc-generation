@@ -36,6 +36,11 @@ export function insertBlockAfter(blocks: Block[], afterBlockId: string, blockToI
   return updateNestedLists(blocks, (children) => insertBlockAfter(children, afterBlockId, blockToInsert));
 }
 
+export function insertBlockAt(blocks: Block[], afterBlockId: string | null, blockToInsert: Block): BlockListResult {
+  if (!afterBlockId) return { blocks: [blockToInsert, ...blocks], changed: true };
+  return insertBlockAfter(blocks, afterBlockId, blockToInsert);
+}
+
 export function removeBlockById(blocks: Block[], id: string): BlockListResult {
   const nextBlocks = blocks.filter((block) => block.id !== id);
   if (nextBlocks.length !== blocks.length) return { blocks: nextBlocks, changed: true };
@@ -76,6 +81,19 @@ export function moveBlockById(blocks: Block[], id: string, direction: BlockDirec
     return { blocks: nextBlocks, changed: true };
   }
   return updateNestedLists(blocks, (children) => moveBlockById(children, id, direction));
+}
+
+export function moveBlockAfter(blocks: Block[], id: string, afterBlockId: string | null): BlockListResult {
+  const sourceIndex = blocks.findIndex((block) => block.id === id);
+  if (sourceIndex < 0) return { blocks, changed: false };
+
+  const block = blocks[sourceIndex];
+  const withoutBlock = blocks.filter((item) => item.id !== id);
+  const targetIndex = afterBlockId ? withoutBlock.findIndex((item) => item.id === afterBlockId) + 1 : 0;
+  if (targetIndex < 0 || targetIndex > withoutBlock.length) return { blocks, changed: false };
+
+  const nextBlocks = [...withoutBlock.slice(0, targetIndex), block, ...withoutBlock.slice(targetIndex)];
+  return { blocks: nextBlocks, changed: nextBlocks.some((item, index) => item.id !== blocks[index]?.id) };
 }
 
 function updateNestedLists(blocks: Block[], updater: (blocks: Block[]) => BlockListResult): BlockListResult {

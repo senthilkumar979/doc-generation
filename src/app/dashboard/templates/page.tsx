@@ -1,3 +1,4 @@
+import { CreateBuilderTemplateButton } from "@/components/templates/CreateBuilderTemplateButton";
 import { TemplatesPanel } from "@/components/templates/TemplatesPanel";
 import type { TemplateRowDto } from "@/components/templates/template-row-dto";
 import { Heading } from "@/components/ui/heading";
@@ -9,7 +10,12 @@ import { requireUserWithOrg } from "@/lib/dashboard/require-user-org";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { isTemplateType } from "@/lib/templates/constants";
 
-export default async function TemplatesPage() {
+interface TemplatesPageProps {
+  searchParams?: Promise<{ builderCreate?: string }>;
+}
+
+export default async function TemplatesPage({ searchParams }: TemplatesPageProps) {
+  const params = await searchParams;
   if (!getSupabasePublicEnv()) {
     return (
       <PageMain>
@@ -68,13 +74,29 @@ export default async function TemplatesPage() {
           Dashboard
         </TextLink>
       </div>
-      <Heading className="mt-4">Templates</Heading>
-      <Text muted className="mt-3 max-w-xl">
-        Letter templates use validated fields and ship with an in-browser PDF preview (React-PDF).
-      </Text>
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <Heading>Templates</Heading>
+          <Text muted className="mt-3 max-w-xl">
+            Create builder templates visually, or use legacy letter templates with an in-browser PDF preview.
+          </Text>
+        </div>
+        <CreateBuilderTemplateButton />
+      </div>
+      <CreateBuilderTemplateError show={params?.builderCreate === "failed"} />
       <div className="mt-10">
         <TemplatesPanel templates={templates} />
       </div>
     </PageMain>
+  );
+}
+
+function CreateBuilderTemplateError({ show }: { show: boolean }) {
+  if (!show) return null;
+
+  return (
+    <Text className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      Could not create a builder template. Please try again.
+    </Text>
   );
 }

@@ -4,8 +4,10 @@ import { BlockType, createDefaultBlock, type Block, type BlockStyles, type Templ
 
 import {
   type BlockDirection,
+  insertBlockAt,
   duplicateBlockById,
   insertBlockAfter,
+  moveBlockAfter,
   moveBlockById,
   removeBlockById,
   updateBlockById,
@@ -26,9 +28,11 @@ interface TemplateBuilderState {
   setTemplate: (template: Template) => void;
   updateTemplateMeta: (meta: TemplateMetaUpdates) => void;
   addBlock: (type: BlockType, afterBlockId?: string) => void;
+  insertBlock: (type: BlockType, afterBlockId: string | null) => void;
   removeBlock: (id: string) => void;
   duplicateBlock: (id: string) => void;
   moveBlock: (id: string, direction: BlockDirection) => void;
+  moveBlockAfter: (id: string, afterBlockId: string | null) => void;
   updateBlock: (id: string, updates: Partial<Block>) => void;
   updateBlockStyles: (id: string, styles: Partial<BlockStyles>) => void;
   updateBlockContent: (id: string, content: BlockContentUpdates) => void;
@@ -58,6 +62,12 @@ export const useTemplateBuilderStore = create<TemplateBuilderState>((set) => ({
       const blocks = result.changed ? result.blocks : [...state.template.blocks, block];
       return commit(state, { ...state.template, blocks }, block.id);
     }),
+  insertBlock: (type, afterBlockId) =>
+    set((state) => {
+      const block = createDefaultBlock(type);
+      const result = insertBlockAt(state.template.blocks, afterBlockId, block);
+      return commit(state, { ...state.template, blocks: result.blocks }, block.id);
+    }),
   removeBlock: (id) =>
     set((state) => {
       const result = removeBlockById(state.template.blocks, id);
@@ -75,6 +85,11 @@ export const useTemplateBuilderStore = create<TemplateBuilderState>((set) => ({
     set((state) => {
       const result = moveBlockById(state.template.blocks, id, direction);
       return result.changed ? commit(state, { ...state.template, blocks: result.blocks }) : state;
+    }),
+  moveBlockAfter: (id, afterBlockId) =>
+    set((state) => {
+      const result = moveBlockAfter(state.template.blocks, id, afterBlockId);
+      return result.changed ? commit(state, { ...state.template, blocks: result.blocks }, id) : state;
     }),
   updateBlock: (id, updates) =>
     set((state) => updateBlockInState(state, id, (block) => ({ ...block, ...updates }) as Block)),
