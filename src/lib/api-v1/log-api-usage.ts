@@ -4,7 +4,7 @@ export interface UsageLogPayload {
   orgId: string;
   apiKeyId: string | null;
   route: string;
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "PATCH" | "DELETE";
   statusCode: number;
   durationMs: number;
   meta?: Record<string, unknown>;

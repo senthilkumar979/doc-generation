@@ -36,6 +36,7 @@ export default async function TemplatesPage() {
     .from("templates")
     .select("id,name,template_type,payload,updated_at")
     .eq("org_id", session.orgId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {

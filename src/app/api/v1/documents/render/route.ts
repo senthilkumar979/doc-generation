@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     .select("id")
     .eq("id", parsed.data.template_id)
     .eq("org_id", orgId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   const durationMs = Date.now() - startedAt;
