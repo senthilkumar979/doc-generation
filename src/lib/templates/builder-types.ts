@@ -38,8 +38,8 @@ export interface BlockStyles {
   fontWeight?: FontWeight;
   fontFamily?: string;
   textAlign?: TextAlign;
-  padding?: number;
-  margin?: number;
+  padding?: number | BoxSpacing;
+  margin?: number | BoxSpacing;
   borderWidth?: number;
   borderColor?: string;
   borderRadius?: number;
@@ -140,3 +140,10 @@ type TemplateVariableReference = `{{${string}}}`;
 type TableRow = Record<string, string | number | boolean | null>;
 type TextAlign = "left" | "center" | "right";
 type FontWeight = "normal" | "medium" | "semibold" | "bold" | number;
+
+interface BoxSpacing {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+}

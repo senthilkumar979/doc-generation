@@ -16,7 +16,7 @@ import {
 const HISTORY_LIMIT = 50;
 
 type TemplateMetaUpdates = Partial<Omit<Template, "blocks" | "variables">>;
-type BlockContentUpdates = Partial<Block["content"]>;
+type BlockContentUpdates = Record<string, unknown>;
 
 interface TemplateBuilderState {
   template: Template;

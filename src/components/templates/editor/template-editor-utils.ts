@@ -56,6 +56,9 @@ export function findBlockById(blocks: Block[], id: string | null): Block | null 
 }
 
 export function blockStylesToCss(styles: BlockStyles): CSSProperties {
+  const padding = toBoxSpacing(styles.padding);
+  const margin = toBoxSpacing(styles.margin);
+
   return {
     backgroundColor: styles.backgroundColor,
     borderColor: styles.borderColor,
@@ -65,9 +68,21 @@ export function blockStylesToCss(styles: BlockStyles): CSSProperties {
     fontFamily: styles.fontFamily,
     fontSize: styles.fontSize,
     fontWeight: styles.fontWeight,
-    margin: styles.margin,
-    padding: styles.padding,
+    margin: typeof styles.margin === "number" ? styles.margin : undefined,
+    marginBottom: margin?.bottom,
+    marginLeft: margin?.left,
+    marginRight: margin?.right,
+    marginTop: margin?.top,
+    padding: typeof styles.padding === "number" ? styles.padding : undefined,
+    paddingBottom: padding?.bottom,
+    paddingLeft: padding?.left,
+    paddingRight: padding?.right,
+    paddingTop: padding?.top,
     textAlign: styles.textAlign,
     width: styles.width,
   };
+}
+
+function toBoxSpacing(value: BlockStyles["padding"]): { top?: number; right?: number; bottom?: number; left?: number } | null {
+  return typeof value === "object" && value !== null ? value : null;
 }

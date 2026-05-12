@@ -10,7 +10,7 @@ import { Canvas } from "./Canvas";
 import { TemplateEditorLoading } from "./TemplateEditorLoading";
 import { TemplateEditorTopBar } from "./TemplateEditorTopBar";
 import { BlockPalette } from "./BlockPalette";
-import { TemplatePropertiesPanel } from "./TemplatePropertiesPanel";
+import { PropertiesPanel } from "./PropertiesPanel";
 import { TemplateVariablesDrawer } from "./TemplateVariablesDrawer";
 import { findBlockById, templateFromApiRow, type TemplateApiRow } from "./template-editor-utils";
 
@@ -103,7 +103,7 @@ export function TemplateEditorShell({ initialTemplate, templateId }: TemplateEdi
       <div className="grid min-h-0 flex-1 grid-cols-[240px_minmax(0,1fr)_280px]">
         <BlockPalette />
         <Canvas />
-        <TemplatePropertiesPanel block={selectedBlock} />
+        <PropertiesPanel block={selectedBlock} onOpenVariables={() => setVariablesOpen(true)} />
       </div>
       <TemplateVariablesDrawer open={variablesOpen} onOpenChange={setVariablesOpen} />
     </div>
