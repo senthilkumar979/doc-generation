@@ -11,7 +11,7 @@ import { TemplateEditorLoading } from "./TemplateEditorLoading";
 import { TemplateEditorTopBar } from "./TemplateEditorTopBar";
 import { BlockPalette } from "./BlockPalette";
 import { PropertiesPanel } from "./PropertiesPanel";
-import { TemplateVariablesDrawer } from "./TemplateVariablesDrawer";
+import { VariablesDrawer } from "./VariablesDrawer";
 import { findBlockById, templateFromApiRow, type TemplateApiRow } from "./template-editor-utils";
 
 interface TemplateEditorShellProps {
@@ -105,7 +105,7 @@ export function TemplateEditorShell({ initialTemplate, templateId }: TemplateEdi
         <Canvas />
         <PropertiesPanel block={selectedBlock} onOpenVariables={() => setVariablesOpen(true)} />
       </div>
-      <TemplateVariablesDrawer open={variablesOpen} onOpenChange={setVariablesOpen} />
+      <VariablesDrawer open={variablesOpen} onOpenChange={setVariablesOpen} />
     </div>
   );
 }
