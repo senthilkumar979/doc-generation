@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTemplateEditorStore } from "@/lib/templates/template-editor.store";
+import { variableReference } from "@/lib/templates/template-variables";
 import type { Block } from "@/types/template";
 
 import { PropertiesPanelContentTab } from "./PropertiesPanelContentTab";
@@ -37,8 +38,8 @@ export function PropertiesPanel({ block, onOpenVariables }: PropertiesPanelProps
             <div className="space-y-2">
               {variables.map((variable) => (
                 <div key={variable.key} className="rounded-md border border-border bg-card p-2">
-                  <div className="text-xs font-medium">{variable.label}</div>
-                  <div className="text-[0.6875rem] text-muted-foreground">{`{{${variable.key}}}`} · {variable.type}</div>
+                  <div className="text-xs font-medium">{variable.label || "Details required"}</div>
+                  <div className="text-[0.6875rem] text-muted-foreground">{variableReference(variable.key)} · {variable.type}</div>
                 </div>
               ))}
             </div>

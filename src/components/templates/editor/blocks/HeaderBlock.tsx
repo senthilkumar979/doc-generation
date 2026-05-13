@@ -1,6 +1,7 @@
 "use client";
 
 import { useTemplateEditorStore } from "@/lib/templates/template-editor.store";
+import { extractVariableKeys } from "@/lib/templates/template-variables";
 import { BlockType, type Block } from "@/types/template";
 import { blockStylesToCss } from "../template-editor-utils";
 
@@ -17,6 +18,10 @@ export function HeaderBlock({ block, previewMode }: BlockComponentProps) {
     contentEditable: !previewMode,
     suppressContentEditableWarning: true,
     style: blockStylesToCss(headerBlock.styles),
+    onInput: (event: React.FormEvent<HTMLHeadingElement>) => {
+      const text = event.currentTarget.innerText;
+      if (extractVariableKeys(text).length > 0) updateBlockContent(headerBlock.id, { text });
+    },
     onBlur: (event: React.FocusEvent<HTMLHeadingElement>) => updateBlockContent(headerBlock.id, { text: event.currentTarget.innerText }),
   };
 

@@ -21,7 +21,9 @@ export function Canvas() {
   const selectedBlockId = useTemplateEditorStore((state) => state.selectedBlockId);
   const previewMode = useTemplateEditorStore((state) => state.previewMode);
   const insertBlock = useTemplateEditorStore((state) => state.insertBlock);
+  const insertBlockInColumn = useTemplateEditorStore((state) => state.insertBlockInColumn);
   const moveBlockAfter = useTemplateEditorStore((state) => state.moveBlockAfter);
+  const moveBlockToColumn = useTemplateEditorStore((state) => state.moveBlockToColumn);
   const setPreviewMode = useTemplateEditorStore((state) => state.setPreviewMode);
 
   useEffect(() => {
@@ -44,17 +46,44 @@ export function Canvas() {
     if (blockId) moveBlockAfter(blockId, lastBlockId);
   }
 
-  function onDropAtBlock(blockId: string, position: InsertPosition, event: React.DragEvent<HTMLElement>) {
+  function onDropAtBlock(blocks: Block[], blockId: string, position: InsertPosition, event: React.DragEvent<HTMLElement>) {
     event.preventDefault();
     event.stopPropagation();
     setInsertTarget(null);
-    const afterBlockId = position === "before" ? previousBlockId(template.blocks, blockId) : blockId;
+    const afterBlockId = position === "before" ? previousBlockId(blocks, blockId) : blockId;
     const type = getPaletteBlockType(event);
     const draggedBlockId = getExistingBlockId(event);
     if (type) insertBlock(type, afterBlockId);
     if (draggedBlockId && draggedBlockId !== blockId && draggedBlockId !== afterBlockId) {
       moveBlockAfter(draggedBlockId, afterBlockId);
     }
+  }
+
+  function onDropAtColumn(parentBlockId: string, side: "left" | "right", event: React.DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setInsertTarget(null);
+    const type = getPaletteBlockType(event);
+    const draggedBlockId = getExistingBlockId(event);
+    if (type) insertBlockInColumn(type, parentBlockId, side);
+    if (draggedBlockId) moveBlockToColumn(draggedBlockId, parentBlockId, side);
+  }
+
+  function renderBlocks(blocks: Block[]) {
+    return blocks.map((block) => (
+      <BlockWrapper
+        key={block.id}
+        block={block}
+        insertPosition={insertTarget?.blockId === block.id ? insertTarget.position : null}
+        previewMode={previewMode}
+        selected={block.id === selectedBlockId}
+        onClearInsert={() => setInsertTarget(null)}
+        onDragInsert={(targetId, position) => setInsertTarget({ blockId: targetId, position })}
+        onDropAtBlock={(blockId, position, event) => onDropAtBlock(blocks, blockId, position, event)}
+      >
+        <BlockRenderer block={block} onDropAtColumn={onDropAtColumn} previewMode={previewMode} renderNestedBlocks={renderBlocks} />
+      </BlockWrapper>
+    ));
   }
 
   return (
@@ -77,22 +106,7 @@ export function Canvas() {
               Drag blocks here to build the PDF template.
             </div>
           ) : (
-            <div className="space-y-3">
-              {template.blocks.map((block) => (
-                <BlockWrapper
-                  key={block.id}
-                  block={block}
-                  insertPosition={insertTarget?.blockId === block.id ? insertTarget.position : null}
-                  previewMode={previewMode}
-                  selected={block.id === selectedBlockId}
-                  onClearInsert={() => setInsertTarget(null)}
-                  onDragInsert={(targetId, position) => setInsertTarget({ blockId: targetId, position })}
-                  onDropAtBlock={onDropAtBlock}
-                >
-                  <BlockRenderer block={block} previewMode={previewMode} />
-                </BlockWrapper>
-              ))}
-            </div>
+            <div className="space-y-3">{renderBlocks(template.blocks)}</div>
           )}
         </div>
       </div>

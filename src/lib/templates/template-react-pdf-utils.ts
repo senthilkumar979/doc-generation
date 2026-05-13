@@ -1,12 +1,13 @@
 import type { Style } from "@react-pdf/types";
 
+import { VARIABLE_TOKEN_PATTERN } from "@/lib/templates/template-variables";
 import type { BlockStyles, Template, TemplateVariable } from "@/types/template";
 
 type TemplateData = Record<string, unknown>;
 
 export function interpolate(text: string, data: TemplateData, variables: TemplateVariable[] = []): string {
   const variableMap = new Map(variables.map((variable) => [variable.key, variable]));
-  return text.replace(/\{\{\s*([^}\s]+)\s*\}\}/g, (_token, key: string) => formatValue(data[key], variableMap.get(key)));
+  return text.replace(VARIABLE_TOKEN_PATTERN, (_token, key: string) => formatValue(data[key], variableMap.get(key)));
 }
 
 export function blockStylesToReactPDF(styles: BlockStyles): Style {

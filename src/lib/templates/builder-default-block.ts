@@ -7,7 +7,7 @@ export function createDefaultBlock(type: BlockType): Block {
     case BlockType.Header:
       return { ...base, type, content: { text: "Section heading", level: 2 } };
     case BlockType.Text:
-      return { ...base, type, content: { text: "Add body text with {{variableName}} values." } };
+      return { ...base, type, content: { text: "Add body text with {{{variableName}}} values." } };
     case BlockType.Table:
       return {
         ...base,

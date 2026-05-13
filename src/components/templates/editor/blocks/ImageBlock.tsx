@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 
+import { getVariableReferenceKey, variableReference } from "@/lib/templates/template-variables";
 import { BlockType, type Block } from "@/types/template";
 import { blockStylesToCss } from "../template-editor-utils";
 
@@ -9,7 +10,7 @@ type ImageBlockType = Extract<Block, { type: BlockType.Image }>;
 
 export function ImageBlock({ block, previewMode }: BlockComponentProps) {
   const imageBlock = block as ImageBlockType;
-  const variableName = /\{\{\s*([^}\s]+)\s*\}\}/.exec(imageBlock.content.src)?.[1];
+  const variableName = getVariableReferenceKey(imageBlock.content.src);
 
   if (!previewMode && variableName) {
     return (
@@ -17,7 +18,7 @@ export function ImageBlock({ block, previewMode }: BlockComponentProps) {
         className="flex items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500"
         style={{ ...blockStylesToCss(imageBlock.styles), width: imageBlock.content.width, height: imageBlock.content.height }}
       >
-        Image from {`{{${variableName}}}`}
+        Image from {variableReference(variableName)}
       </div>
     );
   }

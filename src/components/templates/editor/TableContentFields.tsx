@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useTemplateEditorStore } from "@/lib/templates/template-editor.store";
+import { variableReference } from "@/lib/templates/template-variables";
 import { BlockType, type Block } from "@/types/template";
 
 import { ColorInput, Field } from "./properties-panel-fields";
@@ -57,8 +58,8 @@ export function TableContentFields({ block }: { block: TableBlock }) {
         >
           <option value="">Static rows</option>
           {variables.map((variable) => (
-            <option key={variable.key} value={`{{${variable.key}}}`}>
-              {variable.label}
+            <option key={variable.key} value={variableReference(variable.key)}>
+              {variable.label || variable.key}
             </option>
           ))}
         </select>

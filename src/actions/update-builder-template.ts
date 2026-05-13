@@ -45,6 +45,5 @@ export async function updateBuilderTemplateAction(templateId: string, template: 
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard/templates");
-  revalidatePath(`/dashboard/templates/${templateId}/edit`);
   return { ok: true };
 }

@@ -9,8 +9,9 @@ interface TemplateEditPageProps {
 
 export default async function TemplateEditPage({ params }: TemplateEditPageProps) {
   const { id } = await params;
+  const autoSaveEnabled = process.env.AUTO_SAVE_TEMPLATE === "true";
   const gate = await requireUserWithOrg();
-  if (!gate.ok) return <TemplateEditorShell templateId={id} />;
+  if (!gate.ok) return <TemplateEditorShell autoSaveEnabled={autoSaveEnabled} templateId={id} />;
 
   const { data } = await gate.session.supabase
     .from("templates")
@@ -22,5 +23,5 @@ export default async function TemplateEditPage({ params }: TemplateEditPageProps
 
   if (!data) notFound();
 
-  return <TemplateEditorShell initialTemplate={templateFromApiRow(data as TemplateApiRow)} templateId={id} />;
+  return <TemplateEditorShell autoSaveEnabled={autoSaveEnabled} initialTemplate={templateFromApiRow(data as TemplateApiRow)} templateId={id} />;
 }

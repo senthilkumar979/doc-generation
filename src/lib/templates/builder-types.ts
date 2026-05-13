@@ -136,7 +136,7 @@ interface TemplateMargins {
 type PageSize = "A4" | "Letter" | "Legal";
 type PageOrientation = "portrait" | "landscape";
 type TemplateVariableType = "text" | "number" | "date" | "currency" | "boolean";
-type TemplateVariableReference = `{{${string}}}`;
+type TemplateVariableReference = `{{{${string}}}}`;
 type TableRow = Record<string, string | number | boolean | null>;
 type TextAlign = "left" | "center" | "right";
 type FontWeight = "normal" | "medium" | "semibold" | "bold" | number;

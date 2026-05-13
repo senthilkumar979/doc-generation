@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { useTemplateEditorStore } from "@/lib/templates/template-editor.store";
+import { getVariableReferenceKey, variableReference } from "@/lib/templates/template-variables";
 import { BlockType, type Block } from "@/types/template";
 
 import { Field, numberOrUndefined } from "./properties-panel-fields";
@@ -20,13 +21,13 @@ export function ImageContentFields({ block }: { block: ImageBlock }) {
       <Field label="Source variable">
         <select
           className="h-9 w-full rounded-md border border-input bg-card px-2 text-xs"
-          value={block.content.src.startsWith("{{") ? block.content.src : ""}
+          value={getVariableReferenceKey(block.content.src) ? block.content.src : ""}
           onChange={(event) => updateBlockContent(block.id, { src: event.target.value })}
         >
           <option value="">None</option>
           {variables.map((variable) => (
-            <option key={variable.key} value={`{{${variable.key}}}`}>
-              {variable.label}
+            <option key={variable.key} value={variableReference(variable.key)}>
+              {variable.label || variable.key}
             </option>
           ))}
         </select>

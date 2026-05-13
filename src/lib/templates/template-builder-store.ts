@@ -4,14 +4,18 @@ import { BlockType, createDefaultBlock, type Block, type BlockStyles, type Templ
 
 import {
   type BlockDirection,
+  type ColumnSide,
   insertBlockAt,
+  insertBlockInColumn,
   duplicateBlockById,
   insertBlockAfter,
   moveBlockAfter,
   moveBlockById,
+  moveBlockToColumn,
   removeBlockById,
   updateBlockById,
 } from "./template-builder-blocks";
+import { withDiscoveredVariables } from "./template-variables";
 
 const HISTORY_LIMIT = 50;
 
@@ -29,10 +33,12 @@ interface TemplateBuilderState {
   updateTemplateMeta: (meta: TemplateMetaUpdates) => void;
   addBlock: (type: BlockType, afterBlockId?: string) => void;
   insertBlock: (type: BlockType, afterBlockId: string | null) => void;
+  insertBlockInColumn: (type: BlockType, parentBlockId: string, side: ColumnSide) => void;
   removeBlock: (id: string) => void;
   duplicateBlock: (id: string) => void;
   moveBlock: (id: string, direction: BlockDirection) => void;
   moveBlockAfter: (id: string, afterBlockId: string | null) => void;
+  moveBlockToColumn: (id: string, parentBlockId: string, side: ColumnSide) => void;
   updateBlock: (id: string, updates: Partial<Block>) => void;
   updateBlockStyles: (id: string, styles: Partial<BlockStyles>) => void;
   updateBlockContent: (id: string, content: BlockContentUpdates) => void;
@@ -53,7 +59,10 @@ export const useTemplateBuilderStore = create<TemplateBuilderState>((set) => ({
   history: [createInitialTemplate()],
   historyIndex: 0,
   previewMode: false,
-  setTemplate: (template) => set({ template, history: [cloneTemplate(template)], historyIndex: 0, isDirty: false, selectedBlockId: null }),
+  setTemplate: (template) => {
+    const templateWithVariables = withDiscoveredVariables(template);
+    return set({ template: templateWithVariables, history: [cloneTemplate(templateWithVariables)], historyIndex: 0, isDirty: false, selectedBlockId: null });
+  },
   updateTemplateMeta: (meta) => set((state) => commit(state, { ...state.template, ...meta })),
   addBlock: (type, afterBlockId) =>
     set((state) => {
@@ -67,6 +76,12 @@ export const useTemplateBuilderStore = create<TemplateBuilderState>((set) => ({
       const block = createDefaultBlock(type);
       const result = insertBlockAt(state.template.blocks, afterBlockId, block);
       return commit(state, { ...state.template, blocks: result.blocks }, block.id);
+    }),
+  insertBlockInColumn: (type, parentBlockId, side) =>
+    set((state) => {
+      const block = createDefaultBlock(type);
+      const result = insertBlockInColumn(state.template.blocks, parentBlockId, side, block);
+      return result.changed ? commit(state, { ...state.template, blocks: result.blocks }, block.id) : state;
     }),
   removeBlock: (id) =>
     set((state) => {
@@ -89,6 +104,11 @@ export const useTemplateBuilderStore = create<TemplateBuilderState>((set) => ({
   moveBlockAfter: (id, afterBlockId) =>
     set((state) => {
       const result = moveBlockAfter(state.template.blocks, id, afterBlockId);
+      return result.changed ? commit(state, { ...state.template, blocks: result.blocks }, id) : state;
+    }),
+  moveBlockToColumn: (id, parentBlockId, side) =>
+    set((state) => {
+      const result = moveBlockToColumn(state.template.blocks, id, parentBlockId, side);
       return result.changed ? commit(state, { ...state.template, blocks: result.blocks }, id) : state;
     }),
   updateBlock: (id, updates) =>
@@ -130,9 +150,10 @@ function updateBlockInState(state: TemplateBuilderState, id: string, updater: (b
 }
 
 function commit(state: TemplateBuilderState, template: Template, selectedBlockId = state.selectedBlockId): TemplateBuilderState {
+  const templateWithVariables = withDiscoveredVariables(template);
   const currentHistory = state.history.slice(0, state.historyIndex + 1);
-  const history = [...currentHistory, cloneTemplate(template)].slice(-HISTORY_LIMIT);
-  return { ...state, template, selectedBlockId, isDirty: true, history, historyIndex: history.length - 1 };
+  const history = [...currentHistory, cloneTemplate(templateWithVariables)].slice(-HISTORY_LIMIT);
+  return { ...state, template: templateWithVariables, selectedBlockId, isDirty: true, history, historyIndex: history.length - 1 };
 }
 
 function cloneTemplate(template: Template): Template {

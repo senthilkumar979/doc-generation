@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { Text, View } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
 
+import { getVariableReferenceKey } from "@/lib/templates/template-variables";
 import { BlockType, type Block, type TemplateVariable } from "@/types/template";
 
 import { blockStylesToReactPDF, formatValue, isRecord } from "./template-react-pdf-utils";
@@ -90,7 +91,7 @@ function TableHeader({ block }: { block: Extract<Block, { type: BlockType.Table 
 function resolveRows(block: Extract<Block, { type: BlockType.Table }>, data: TemplateData): TemplateData[] {
   if (typeof block.content.rows !== "string") return block.content.rows;
 
-  const key = /^\{\{\s*([^}\s]+)\s*\}\}$/.exec(block.content.rows)?.[1];
+  const key = getVariableReferenceKey(block.content.rows);
   const value = key ? data[key] : null;
   return Array.isArray(value) ? value.filter(isRecord) : [];
 }

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { TemplateVariable } from "@/types/template";
 
+import { variableTypes, type VariableType } from "./variables-drawer-utils";
+
 export function VariableRow({
   variable,
   onRemove,
@@ -22,7 +24,7 @@ export function VariableRow({
       <div className="flex items-start justify-between gap-3">
         <div>
           <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{variable.key}</code>
-          <div className="mt-1 text-sm font-medium">{variable.label}</div>
+          {!variable.label.trim() ? <div className="mt-1 text-xs text-destructive">Details required before saving</div> : null}
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{variable.type}</Badge>
@@ -30,6 +32,24 @@ export function VariableRow({
             <Trash2 />
           </Button>
         </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">Label</Label>
+        <Input value={variable.label} onChange={(event) => onUpdate({ label: event.target.value })} />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">Type</Label>
+        <select
+          className="h-10 w-full rounded-md border border-input bg-card px-3 text-sm"
+          value={variable.type}
+          onChange={(event) => onUpdate({ type: event.target.value as VariableType })}
+        >
+          {variableTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">Default value</Label>

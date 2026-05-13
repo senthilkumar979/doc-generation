@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { BlockType, type Block } from "@/types/template";
 
 import { DividerBlock } from "./DividerBlock";
@@ -12,10 +14,12 @@ import { TwoColumnBlock } from "./TwoColumnBlock";
 
 interface BlockRendererProps {
   block: Block;
+  onDropAtColumn?: (parentBlockId: string, side: "left" | "right", event: React.DragEvent<HTMLDivElement>) => void;
   previewMode: boolean;
+  renderNestedBlocks?: (blocks: Block[]) => ReactNode;
 }
 
-export function BlockRenderer({ block, previewMode }: BlockRendererProps) {
+export function BlockRenderer({ block, onDropAtColumn, previewMode, renderNestedBlocks }: BlockRendererProps) {
   switch (block.type) {
     case BlockType.Header:
       return <HeaderBlock block={block} previewMode={previewMode} />;
@@ -30,7 +34,14 @@ export function BlockRenderer({ block, previewMode }: BlockRendererProps) {
     case BlockType.Spacer:
       return <SpacerBlock block={block} previewMode={previewMode} />;
     case BlockType.TwoColumn:
-      return <TwoColumnBlock block={block} previewMode={previewMode} />;
+      return (
+        <TwoColumnBlock
+          block={block}
+          onDropAtColumn={onDropAtColumn}
+          previewMode={previewMode}
+          renderNestedBlocks={renderNestedBlocks}
+        />
+      );
     case BlockType.Signature:
       return <SignatureBlock block={block} previewMode={previewMode} />;
     case BlockType.PageBreak:

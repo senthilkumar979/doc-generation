@@ -1,6 +1,7 @@
 import { BlockType, type Block } from "@/types/template";
 
 export type BlockDirection = "up" | "down";
+export type ColumnSide = "left" | "right";
 
 export interface BlockListResult {
   blocks: Block[];
@@ -39,6 +40,13 @@ export function insertBlockAfter(blocks: Block[], afterBlockId: string, blockToI
 export function insertBlockAt(blocks: Block[], afterBlockId: string | null, blockToInsert: Block): BlockListResult {
   if (!afterBlockId) return { blocks: [blockToInsert, ...blocks], changed: true };
   return insertBlockAfter(blocks, afterBlockId, blockToInsert);
+}
+
+export function insertBlockInColumn(blocks: Block[], parentBlockId: string, side: ColumnSide, blockToInsert: Block): BlockListResult {
+  return updateBlockById(blocks, parentBlockId, (block) => {
+    if (block.type !== BlockType.TwoColumn) return block;
+    return { ...block, content: { ...block.content, [side]: [...block.content[side], blockToInsert] } };
+  });
 }
 
 export function removeBlockById(blocks: Block[], id: string): BlockListResult {
@@ -84,16 +92,19 @@ export function moveBlockById(blocks: Block[], id: string, direction: BlockDirec
 }
 
 export function moveBlockAfter(blocks: Block[], id: string, afterBlockId: string | null): BlockListResult {
-  const sourceIndex = blocks.findIndex((block) => block.id === id);
-  if (sourceIndex < 0) return { blocks, changed: false };
+  if (id === afterBlockId) return { blocks, changed: false };
+  const extracted = extractBlockById(blocks, id);
+  if (!extracted.block) return { blocks, changed: false };
+  const inserted = insertExistingBlockAfter(extracted.blocks, afterBlockId, extracted.block);
+  return inserted.changed ? inserted : { blocks, changed: false };
+}
 
-  const block = blocks[sourceIndex];
-  const withoutBlock = blocks.filter((item) => item.id !== id);
-  const targetIndex = afterBlockId ? withoutBlock.findIndex((item) => item.id === afterBlockId) + 1 : 0;
-  if (targetIndex < 0 || targetIndex > withoutBlock.length) return { blocks, changed: false };
-
-  const nextBlocks = [...withoutBlock.slice(0, targetIndex), block, ...withoutBlock.slice(targetIndex)];
-  return { blocks: nextBlocks, changed: nextBlocks.some((item, index) => item.id !== blocks[index]?.id) };
+export function moveBlockToColumn(blocks: Block[], id: string, parentBlockId: string, side: ColumnSide): BlockListResult {
+  if (id === parentBlockId) return { blocks, changed: false };
+  const extracted = extractBlockById(blocks, id);
+  if (!extracted.block) return { blocks, changed: false };
+  const inserted = insertBlockInColumn(extracted.blocks, parentBlockId, side, extracted.block);
+  return inserted.changed ? inserted : { blocks, changed: false };
 }
 
 function updateNestedLists(blocks: Block[], updater: (blocks: Block[]) => BlockListResult): BlockListResult {
@@ -107,6 +118,31 @@ function updateNestedLists(blocks: Block[], updater: (blocks: Block[]) => BlockL
     return { ...block, content: { ...block.content, left: left.blocks, right: right.blocks } };
   });
   return { blocks: nextBlocks, changed };
+}
+
+function extractBlockById(blocks: Block[], id: string): BlockListResult & { block?: Block } {
+  const index = blocks.findIndex((block) => block.id === id);
+  if (index >= 0) return { blocks: blocks.filter((block) => block.id !== id), block: blocks[index], changed: true };
+
+  let changed = false;
+  let extractedBlock: Block | undefined;
+  const nextBlocks = blocks.map((block) => {
+    if (block.type !== BlockType.TwoColumn) return block;
+    const left = extractBlockById(block.content.left, id);
+    const right = extractBlockById(block.content.right, id);
+    if (!left.changed && !right.changed) return block;
+    changed = true;
+    extractedBlock = left.block ?? right.block;
+    return { ...block, content: { ...block.content, left: left.blocks, right: right.blocks } };
+  });
+  return { blocks: nextBlocks, block: extractedBlock, changed };
+}
+
+function insertExistingBlockAfter(blocks: Block[], afterBlockId: string | null, blockToInsert: Block): BlockListResult {
+  if (!afterBlockId) return { blocks: [blockToInsert, ...blocks], changed: true };
+  const index = blocks.findIndex((block) => block.id === afterBlockId);
+  if (index >= 0) return { blocks: [...blocks.slice(0, index + 1), blockToInsert, ...blocks.slice(index + 1)], changed: true };
+  return updateNestedLists(blocks, (children) => insertExistingBlockAfter(children, afterBlockId, blockToInsert));
 }
 
 function cloneBlockWithNewIds(block: Block): Block {

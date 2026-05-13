@@ -28,11 +28,12 @@ describe("useTemplateBuilderStore", () => {
     const blockId = useTemplateBuilderStore.getState().template.blocks[0].id;
 
     useTemplateBuilderStore.getState().updateBlockStyles(blockId, { color: "#0f172a" });
-    useTemplateBuilderStore.getState().updateBlockContent(blockId, { text: "Hello {{name}}" });
+    useTemplateBuilderStore.getState().updateBlockContent(blockId, { text: "Hello {{{name}}}" });
 
     const block = useTemplateBuilderStore.getState().template.blocks[0];
     expect(block.styles.color).toBe("#0f172a");
-    expect(block.content).toMatchObject({ text: "Hello {{name}}" });
+    expect(block.content).toMatchObject({ text: "Hello {{{name}}}" });
+    expect(useTemplateBuilderStore.getState().template.variables).toContainEqual({ key: "name", label: "", type: "text", defaultValue: "" });
   });
 
   it("duplicates, moves, and removes blocks", () => {
@@ -53,6 +54,24 @@ describe("useTemplateBuilderStore", () => {
 
     useTemplateBuilderStore.getState().removeBlock(headerId);
     expect(useTemplateBuilderStore.getState().template.blocks.some((block) => block.id === headerId)).toBe(false);
+  });
+
+  it("adds and moves blocks into two-column children", () => {
+    const store = useTemplateBuilderStore.getState();
+    store.addBlock(BlockType.TwoColumn);
+    store.addBlock(BlockType.Text);
+
+    const [twoColumnBlock, textBlock] = useTemplateBuilderStore.getState().template.blocks;
+    store.insertBlockInColumn(BlockType.Header, twoColumnBlock.id, "left");
+    store.moveBlockToColumn(textBlock.id, twoColumnBlock.id, "right");
+
+    const updatedBlock = useTemplateBuilderStore.getState().template.blocks[0];
+    expect(updatedBlock.type).toBe(BlockType.TwoColumn);
+    if (updatedBlock.type !== BlockType.TwoColumn) return;
+    expect(updatedBlock.content.left).toHaveLength(1);
+    expect(updatedBlock.content.left[0].type).toBe(BlockType.Header);
+    expect(updatedBlock.content.right.map((block) => block.id)).toEqual([textBlock.id]);
+    expect(useTemplateBuilderStore.getState().template.blocks).toHaveLength(1);
   });
 
   it("supports undo and redo", () => {
